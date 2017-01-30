@@ -61,8 +61,7 @@ ECSubset <-
       id = "character",
       filters = "list",
       label = "character",
-      misc = "list",
-      observerList = "data.frame"
+      misc = "list"
     ),
     prototype = list(filters = list(), misc = list())
   )
@@ -125,8 +124,12 @@ createSubset <- function(userInfo, label = NULL) {
 
 
 ## Getthe current SubsetId
-getCurrentSubsetId <- function(userInfo) {
-  isolate(userInfo$currentSubset)
+getCurrentSubsetId <- function(userInfo, isolate = TRUE) {
+  if (isolate) {
+    isolate(userInfo$currentSubset)
+  } else {
+    userInfo$currentSubset
+  }
 }
 
 setCurrentSubset <- function(subsetId, userInfo){
@@ -142,8 +145,12 @@ extractInfoBySubsetId <- function(userInfo, subsetId, container) {
 }
 
 
-getSubsets <- function(userInfo) {
-  isolate(userInfo$subsets)
+getSubsets <- function(userInfo, isolate = TRUE) {
+  if (isolate) {
+    isolate(userInfo$subsets)
+  } else {
+    userInfo$subsets
+  }
 }
 
 ## Get a subset from userInfo by subsetId
@@ -158,8 +165,12 @@ setSubset <- function(subset, userInfo) {
 }
 
 ## Get Subset data by subsetId
-getSubsetData <- function(subsetId, userInfo) {
-  extractInfoBySubsetId(userInfo, subsetId, "subsetData")
+getSubsetData <- function(subsetId, userInfo, as.df = FALSE) {
+  data <- extractInfoBySubsetId(userInfo, subsetId, "subsetData")
+  if (as.df && !is.null(data)) {
+    return(data@data)
+  }
+  return(data)
 }
 
 ## Return the current subset
@@ -168,8 +179,8 @@ getCurrentSubset <- function(userInfo) {
 }
 
 ## Get the data for the current subset
-getCurrentSubsetData <- function(userInfo) {
-  getSubsetData(NULL, userInfo)
+getCurrentSubsetData <- function(userInfo, as.df = FALSE) {
+  getSubsetData(NULL, userInfo, as.df)
 }
 
 
@@ -297,4 +308,12 @@ getFilterNamesList <- function(filters) {
   } else {
     NULL
   }
+}
+
+
+## Return a vector of subset labels
+getSubsetsLabels <- function(subsets) {
+  unlist(lapply(subsets, function(x) {
+    return(getLabel(x))
+  }))
 }

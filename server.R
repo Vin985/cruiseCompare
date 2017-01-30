@@ -21,6 +21,6 @@ shinyServer(function(input, output, session) {
   
   
   changeSubsets(input, output, session, userInfo)
-  
   selectDataFilters(input, output, session, userInfo)
+  createReport(input, output, session, userInfo)
 })

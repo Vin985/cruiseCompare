@@ -77,6 +77,7 @@ selectDataFiltersObservers <- function(input, output, session, userInfo) {
       logdebug("Resetting current subsets...")
       userInfo$subsetData <- list()
   })
+  
 }
 
 
@@ -103,6 +104,7 @@ selectDataFiltersRender <- function(input, output, session, userInfo) {
     actionButton("subsetData", geti18nValue("data.subset", userInfo$lang)),
     actionButton("resetData", geti18nValue("reset.data.subset", userInfo$lang)))
   })
+  
 }
 
 

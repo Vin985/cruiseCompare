@@ -113,7 +113,7 @@ selectSpeciesObserver <-
   function(input, output, session, userInfo) {
     ##Isolate species names and codes
     userInfo$species <-
-      isolate(distinct(select(getFullData()@data, Alpha, English, French, Latin, group_detection)))
+      isolate(distinct(dplyr::select(getFullData(as.df = TRUE), Alpha, English, French, Latin)))
     
     
     ## Update choices list if names are selected

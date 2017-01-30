@@ -1,6 +1,12 @@
 
+
 cleanDatabase <- function(d) {
-  groups <- read.csv("bird_groups.csv", 
+  
+  d$Alpha <- as.character(d$Alpha)
+  d$Alpha[is.na(d$Alpha) |
+             d$Alpha %in% c("RIEN", "NOBI")] <- ""
+
+  groups <- read.csv("bird_groups.csv",
                      header = TRUE,
                      stringsAsFactors = FALSE)
   
@@ -9,36 +15,34 @@ cleanDatabase <- function(d) {
                      header = TRUE,
                      stringsAsFactors = FALSE)
   
-  d$Alpha <- as.character(d$Alpha)
-  d$Alpha[is.na(d$Alpha) |
-             d$Alpha %in% c("RIEN", "NOBI")] <- ""
   
-  d$English <- spname$English_Name[match(d$Alpha, spname$Species_ID)]
+  d$English <-
+    spname$English_Name[match(d$Alpha, spname$Species_ID)]
   d$French <- spname$French_Name[match(d$Alpha, spname$Species_ID)]
   
   d$English[is.na(d$English)] <- ""
-  d$French[is.na(d$French)] <- "" 
-  
+  d$French[is.na(d$French)] <- ""
+
   d$English[grep("Genus: Gulls", d$English)] <- "Genus: Gulls"
   m <- match(d$English, groups$sp)
-  
+
   # If no species are in English because of an empty transect, we don't want ;a group name
   d$group_detection <-
     ifelse(!d$English %in% c("", NA), groups$group_detection[m], "")
   d$group_atlas <-
     ifelse(!d$English %in% c("", NA), groups$group_atlas[m], "")
-  
+
   # Check what does not have a group name to make sure it is not an important species
   empty <- is.na(d$group_detection) | d$group_detection == ""
   sort(table(d$English[empty]))
   empty <- is.na(d$group_atlas) | d$group_detection == ""
   sort(table(d$English[empty]))
-  
+
   # Turn what does not have a group to empty values in species, distance, groups and count
-  
+
   k1 <- !d$Alpha %in% c("", NA) & d$group_detection %in% c("", NA)
   k2 <- !d$Alpha %in% c("", NA) & d$group_atlas %in% c("", NA)
-  
+
   d$Alpha <- ifelse(k1 & k2, "", d$Alpha)
   d$English <- ifelse(k1 & k2, "", d$English)
   d$Count <- ifelse(k1 & k2, "", d$Count)
@@ -46,7 +50,14 @@ cleanDatabase <- function(d) {
   d$group_detection <- ifelse(k1 & k2, "", d$group_detection)
   d$group_atlas <- ifelse(k1 & k2, "", d$group_atlas)
   
-  d$ObserverName <- as.character(d$ObserverName)
+  if (is.null(d$ObserverName)) {
+    d$ObserverName <- as.character(d$ObserverID)
+  } else {
+    d$ObserverName <- as.character(d$ObserverName)
+    d$ObserverID <- factor(d$ObserverName)
+  }
+  
+  d$Count <- as.numeric(d$Count)
   
   d
 }

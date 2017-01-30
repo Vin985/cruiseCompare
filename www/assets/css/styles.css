@@ -38,6 +38,30 @@ div.outer {
   text-transform : capitalize;
 }
 
+.reportButtons {
+  display : flex;
+  justify-content : flex-end;
+  padding : 30px 15px;
+  width : 95%;
+}
+
+.reportButton {
+  border: 0px;
+  color: #fff;
+  text-shadow: 0 1px rgba(0,0,0,0.1); 
+  background-color: #4d90fe;
+  padding: 10px;
+  font-size: 14px;
+}
+
+
+.reportButton:hover, .reportButton:focus{
+  border: 0px;
+  color: #fff;
+  background-color: #4d90fe;
+}
+
+
 .selector {
   border: 1px solid #ccc;
   border-radius: 6px;
