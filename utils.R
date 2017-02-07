@@ -91,7 +91,6 @@ invisible(setMethod("is.empty", "SpatialPointsDataFrame", is.empty.data.frame))
 
 
 selection2polygon <- function(selections) {
-  str(selections)
   lapply(selections, function(x) {
     locs <- x$geometry$coordinates
     Polygon(matrix(unlist(locs), ncol = 2, byrow = TRUE))

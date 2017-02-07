@@ -99,17 +99,6 @@ addObserverFilter <- function(selections, type, userInfo) {
   filter <- getCurrentFilter(userInfo, OBSERVER_FILTER)
   condition <- getCondition(filter)
   
-  # ## Reset cruises if we change observer
-  # if (type == TYPE_OBSERVER) {
-  #   ## If there is already a filter for this observer, skip
-  #   observer <- condition[[type]]
-  #   if (!is.null(observer) &&
-  #       observer == selections) {
-  #     return()
-  #   }
-  #   condition[[TYPE_CRUISE]] <- NULL
-  # }
-  
   condition[[type]] <- selections
   
   loginfo("add %s filter with value %s", type, selections)
@@ -141,7 +130,6 @@ updateCruisesInput <-
         filter(cruiseData, ObserverName == observer)$CruiseID
     } else {
       # If observer is empty, laod all cruises
-      # cruiseSelection <- character(0)
       cruiseChoices <- cruiseData$CruiseID
     }
     
@@ -217,22 +205,21 @@ selectObserverObserver <-
     
     
     ## Update inputs labels if language changes
-    observeEvent(userInfo$lang, {
+    observeEvent(userInfo[[CHANGE_LANG_EVENT]], {
       loginfo("changing language")
       updateObserverInput(session, userInfo, updateChoices = FALSE)
     })
     
     
     ## Update selections if subset changes
-    observeEvent(userInfo$currentSubset, {
+    observeEvent(userInfo[[CHANGE_SUBSET_EVENT]], {
       loginfo("changing subset")
-      setObserverList(userInfo)
       updateObserverInput(session, userInfo)
     })
     
     
     ## Update inputs if data is subsetted
-    observeEvent(userInfo$subsetData, {
+    observeEvent(userInfo[[SUBSET_DATA_EVENT]], {
       loginfo("subsetting Data")
       setObserverList(userInfo)
       updateObserverInput(session, userInfo)

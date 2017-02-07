@@ -140,7 +140,7 @@ updateMap <- function(userInfo) {
 ## Main observer function for region selection. All observers are defined here
 selectRegionObserver <- function(input, output, session, userInfo) {
   ## Check if data has changed and update map
-  observeEvent(userInfo$subsetData, {
+  observeEvent(userInfo[[SUBSET_DATA_EVENT]], {
     updateMap(userInfo)
   })
   
@@ -153,7 +153,7 @@ selectRegionObserver <- function(input, output, session, userInfo) {
   
   
   ## Update selections if subset changes
-  observeEvent(userInfo$currentSubset, {
+  observeEvent(userInfo[[CHANGE_SUBSET_EVENT]], {
     updateMap(userInfo)
   })
 }

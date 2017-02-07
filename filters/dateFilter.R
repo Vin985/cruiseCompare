@@ -7,6 +7,7 @@ DATE_FILTER <- "date"
 TYPE_RANGE <- "range"
 TYPE_YEARS <- "years"
 TYPE_MONTHS <- "months"
+MISC_DATE_INFO <- "dateInfo"
 
 ###################
 ### Initialize
@@ -104,11 +105,10 @@ updateDateChoices <-
       names(monthChoices) <- getMonthsNames(userInfo$lang)
     } else {
       ## Update range and years based on subset
-      data <- isolate(getCurrentData(userInfo))
-      yearChoices <-
-        sort(unique(data$Year), decreasing = TRUE)
-      minRange <- min(data$Date)
-      maxRange <- max(data$Date)
+      yearChoices <- getDateYears(userInfo)
+      bounds <- getDateRangeBounds(userInfo)
+      minRange <- bounds[1]
+      maxRange <- bounds[2]
     }
     
     ## update selection based on filters
@@ -239,23 +239,45 @@ selectDateObserver <-
     
     
     ## Data has been subsetted, update date selection
-    observeEvent(userInfo$subsetData, {
+    observeEvent(userInfo[[SUBSET_DATA_EVENT]], {
       logdebug("update date subset")
+      setDateData(userInfo)
       updateDateChoices(input, session, userInfo, event = SUBSET_DATA_EVENT)
     })
     
     ## Update inputs labels if language change
-    observeEvent(userInfo$lang, {
+    observeEvent(userInfo[[CHANGE_LANG_EVENT]], {
       updateDateChoices(input, session, userInfo, event = CHANGE_LANG_EVENT)
     })
     
     ## Change subset
-    observeEvent(userInfo$currentSubset, {
+    observeEvent(userInfo[[CHANGE_SUBSET_EVENT]], {
       updateDateChoices(input, session, userInfo, event = CHANGE_SUBSET_EVENT)
     })
     
   }
 
+
+getDateRangeBounds <- function(userInfo) {
+  dateInfo <- getMiscBySubset(MISC_DATE_INFO, userInfo)
+  return(c(dateInfo$min, dateInfo$max))
+}
+
+getDateYears <- function(userInfo) {
+  dateInfo <- getMiscBySubset(MISC_DATE_INFO, userInfo)
+  return(dateInfo$years)
+}
+
+setDateData <- function(userInfo) {
+  data <- isolate(getCurrentData(userInfo))
+  min <- min(data$Date)
+  max <- max(data$Date)
+  years <-
+    sort(unique(data$Year), decreasing = TRUE)
+  dateMisc <- list(min = min, max = max, years = years)
+  addMiscToSubset(MISC_DATE_INFO, dateMisc, userInfo)
+  return(dateMisc)
+}
 
 ##############
 ### Renders
@@ -263,44 +285,52 @@ selectDateObserver <-
 
 ## Main render function for date selection. All UI render function are here
 selectDateRender <- function(input, output, session, userInfo) {
+  
+  dateInfo <- isolate(setDateData(userInfo))
+  
   selectDateBy <- list(TYPE_YEARS, TYPE_RANGE)
   months <- 1:12
   
   
+  output$dateRangeSelect <- renderUI({
+    isolate({
+      min <- dateInfo$min
+      max <- dateInfo$max
+      dateRangeInput(
+        "dateRange",
+        label = geti18nValue("select.date.range", userInfo$lang),
+        start = min,
+        end = max,
+        min = min,
+        max = max
+      )
+    })
+  })
+  
+  output$dateYearsSelect <- renderUI({
+    isolate({
+      years <- dateInfo$years
+      selectizeInput(
+        "dateYears",
+        label = geti18nValue("select.date.years", userInfo$lang),
+        choices = years,
+        multiple = TRUE,
+        options = list(
+          plugins = list("remove_button"),
+          placeholder = geti18nValue("select.all", userInfo$lang)
+        )
+      )
+    })
+  })
+  
   ## Select by years or by range
   output$dateSelectionMode <- renderUI({
-    data <- isolate(getCurrentData(userInfo))
-
     # Select by range
     if (input$selectDateBy == TYPE_RANGE) {
-      min <- min(isolate(data$Date))
-      max <- max(isolate(data$Date))
-      isolate(
-        dateRangeInput(
-          "dateRange",
-          label = geti18nValue("select.date.range", userInfo$lang),
-          start = min,
-          end = max,
-          min = min,
-          max = max
-        )
-      )
+      uiOutput("dateRangeSelect")
     } else {
       # Select by years
-      years <-
-        sort(unique(isolate(data$Year)), decreasing = TRUE)
-      isolate(
-        selectizeInput(
-          "dateYears",
-          label = geti18nValue("select.date.years", userInfo$lang),
-          choices = years,
-          multiple = TRUE,
-          options = list(
-            plugins = list("remove_button"),
-            placeholder = geti18nValue("select.all", userInfo$lang)
-          )
-        )
-      )
+      uiOutput("dateYearsSelect")
     }
   })
   

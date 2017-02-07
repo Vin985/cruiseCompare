@@ -5,6 +5,9 @@ REPORT_OUTPUT_DIR <- "output"
 TYPE_COMPARE <- "compare"
 TYPE_CREATE <- "create"
 
+DEFAULT_AUTHOR_NAME <- "Author"
+DEFAULT_FILE_NAME <- "report"
+
 ###################
 ### Initialize
 ##################
@@ -21,11 +24,15 @@ createReport <- function(input, output, session, userInfo) {
 ###########
 
 
-generateReport <- function(subsetId, userInfo) {
-  author <- "Author" #needed in markdown
+generateReport <- function(subsetId, input, userInfo) {
+  #needed in markdown
+  author <- if (!is.null(input$reportAuthor)) {
+    input$reportAuthor
+    } else {
+      DEFAULT_AUTHOR_NAME
+    }
   today <- Sys.Date() #needed in markdown
   
-  browser()
   subsetData <- getSubsetData(subsetId, userInfo, as.df = TRUE)
   if (is.null(subsetData)) {
     subset <- getSubset(subsetId, userInfo)
@@ -37,7 +44,16 @@ generateReport <- function(subsetId, userInfo) {
   
   Observation.df <- droplevels(subsetData)
   
-  outputFile <- paste0("report_", subsetId,".docx")
+  # If there is more than one to generate, suffix the subset id
+  addSubsetId <- ifelse(length(input$subsetReport) > 1, paste0("_", subsetId), "")
+  # Use the user provided name or the default one if it doesn't exists
+  fileName <- ifelse(is.empty(input$reportFileName), DEFAULT_FILE_NAME, input$reportFileName)
+  
+  outputFile <- paste0(fileName, addSubsetId,".docx")
+  
+  
+  loginfo("output File name: %s", outputFile)
+  
   outputDir <- "output"
   
   # testmd(Observation.df)
@@ -51,7 +67,7 @@ generateReport <- function(subsetId, userInfo) {
 }
 
 generateReports <- function(input, output, session, userInfo) {
-  lapply(input$subsetReport, generateReport, userInfo)
+  lapply(input$subsetReport, generateReport, input, userInfo)
 }
 
 compareReports <- function(input, output, session, userInfo) {
@@ -108,7 +124,6 @@ createReportRender <- function(input, output, session, userInfo) {
     }
   })
   
-  
   output$createReportOptions <- renderUI({
     loginfo("Displaying list of subsets...")
     isolate({
@@ -121,11 +136,32 @@ createReportRender <- function(input, output, session, userInfo) {
     tagList(selectizeInput(
       "subsetReport",
       geti18nValue("filter.choices.subset", userInfo$lang),
-      choices = subsetChoices
-    ))
+      choices = subsetChoices,
+      multiple = TRUE
+    ),
+    textInput("reportAuthor", geti18nValue("report.author.name", userInfo$lang),
+              placeholder = geti18nValue("report.author.name.placeholder", userInfo$lang)),
+    textInput("reportFileName", geti18nValue("report.file.name", userInfo$lang),
+              placeholder = geti18nValue("report.file.name.placeholder", userInfo$lang)),
+    checkboxInput("askDownloadDest", geti18nValue("report.ask.dest", userInfo$lang)),
+    fileInput("reportDownload", geti18nValue("report.save.dest", userInfo$lang))
+    )
     
   })
 
+  output$reportActionButtons <- renderUI({
+    div(
+      style = "text-align: right;",
+      actionButton(
+        "generateReport",
+        geti18nValue("report.generate", userInfo$lang)
+      ),
+      actionButton(
+        "cancelSubset",
+        geti18nValue("button.cancel", userInfo$lang)
+      )
+    )
+  })
   
   output$compareReportOptions <- renderUI({
     
@@ -150,17 +186,7 @@ createReportModal <- function(input, output, session, userInfo) {
         inline = TRUE
       ),
       uiOutput("reportOptions"),
-      div(
-        style = "text-align: right;",
-        actionButton(
-          "generateReport",
-          geti18nValue("report.generate", userInfo$lang)
-        ),
-        actionButton(
-          "cancelSubset",
-          geti18nValue("button.cancel", userInfo$lang)
-        )
-      )
+      uiOutput("reportActionButtons")
     ),
     footer = NULL,
     easyClose = TRUE

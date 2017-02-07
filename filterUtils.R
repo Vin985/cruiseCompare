@@ -1,5 +1,6 @@
 
 
+
 #######################
 ###  ECFilter Class
 #####################
@@ -26,7 +27,7 @@ getCondition <- function(filter) {
 setCondition <- function(condition, filter) {
   filter@condition <- condition
   filter
-} 
+}
 
 ## Filter data by a specific filter
 filterBy <- function(by, filters, data) {
@@ -84,7 +85,7 @@ getLabel <- function(subset) {
   subset@label
 }
 
-getMisc <- function(subset, id){
+getMisc <- function(subset, id) {
   subset@misc[[id]]
 }
 
@@ -132,7 +133,7 @@ getCurrentSubsetId <- function(userInfo, isolate = TRUE) {
   }
 }
 
-setCurrentSubset <- function(subsetId, userInfo){
+setCurrentSubset <- function(subsetId, userInfo) {
   userInfo$currentSubset <- subsetId
 }
 
@@ -234,7 +235,7 @@ getFilterBySubset <-
     if (create && is.null(filter)) {
       filter <- ECFilter(type = type)
     }
-    return(filter)  
+    return(filter)
   }
 
 ## Return the current filter of desired type
@@ -295,19 +296,19 @@ getMiscBySubset <- function(id, userInfo, subsetId = NULL) {
 
 ## Recursively get through a list to concatenate all list names
 getFilterNamesList <- function(filters) {
-  if (length(filters) > 0) {
-    unlist(lapply(seq_along(filters), function(i, filters) {
-      # If filter has name, use it, otherwise use index
-      name <- names(filters)[i]
-      # If element is a list, paste current name and recall the function
-      condition <- getCondition(filters[[i]])
-      if (length(condition) > 0) {
-        paste(name, getListNames(condition), sep = ".")
-      } 
-    }, filters))
-  } else {
-    NULL
-  }
+    if (length(filters) > 0) {
+      unlist(lapply(seq_along(filters), function(i, filters) {
+        # If filter has name, use it, otherwise use index
+        name <- names(filters)[i]
+        # If element is a list, paste current name and recall the function
+        condition <- getCondition(filters[[i]])
+        if (length(condition) > 0) {
+          paste(name, getListNames(condition), sep = ".")
+        }
+      }, filters))
+    } else {
+      NULL
+    }
 }
 
 

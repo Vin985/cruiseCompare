@@ -68,7 +68,7 @@ selectDataFiltersObservers <- function(input, output, session, userInfo) {
       names(subsetsData) <- names(subsets)
       userInfo$subsetData <- subsetsData
     }
-    
+    launchEvent(SUBSET_DATA_EVENT, userInfo)
   })
   
   

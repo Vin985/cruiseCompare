@@ -131,19 +131,19 @@ selectSpeciesObserver <-
     
     
     ## Update species selection based on current subset
-    observeEvent(userInfo$subsetData, {
+    observeEvent(userInfo[[SUBSET_DATA_EVENT]], {
       updateSpeciesInput(input, session, userInfo)
     })
     
     
     ## Update species selection based on current subset
-    observeEvent(userInfo$currentSubset, {
+    observeEvent(userInfo[[CHANGE_SUBSET_EVENT]], {
       updateSpeciesInput(input, session, userInfo)
     })
     
     
     ## Update inputs labels if language change
-    observeEvent(userInfo$lang, {
+    observeEvent(userInfo[[CHANGE_LANG_EVENT]], {
       ## Update checkbox label
       updateCheckboxInput(session,
                           "useNames",
