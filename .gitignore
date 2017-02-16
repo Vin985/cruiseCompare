@@ -49,3 +49,8 @@ Temporary Items
 .Rproj.user
 *.Rproj
 temp
+output/
+detection.png
+Fig4.png
+None
+analysis
