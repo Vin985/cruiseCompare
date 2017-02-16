@@ -1,4 +1,6 @@
 
+
+
 REPORT_OUTPUT_DIR <- "output"
 
 
@@ -24,78 +26,142 @@ createReport <- function(input, output, session, userInfo) {
 ###########
 
 
-generateReport <- function(subsetId, input, userInfo) {
-  #needed in markdown
-  author <- if (!is.null(input$reportAuthor)) {
-    input$reportAuthor
+generateReport <-
+  function(subsetId, input, userInfo, fileDest = NULL) {
+    loginfo("inside report generation with subsetId: %s", subsetId)
+    #needed in markdown
+    author <- if (!is.empty(input$reportAuthor)) {
+      input$reportAuthor
     } else {
       DEFAULT_AUTHOR_NAME
     }
-  today <- Sys.Date() #needed in markdown
-  
-  subsetData <- getSubsetData(subsetId, userInfo, as.df = TRUE)
-  if (is.null(subsetData)) {
-    subset <- getSubset(subsetId, userInfo)
-    subsetData <- filterData(subset, userInfo)
-    if (!is.null(subsetData)) {
-      subsetData <- subsetData@data
+    today <- Sys.Date() #needed in markdown
+    
+    subsetData <- getSubsetData(subsetId, userInfo, as.df = TRUE)
+    if (is.null(subsetData)) {
+      subset <- getSubset(subsetId, userInfo)
+      subsetData <- filterData(subset, userInfo)
+      if (!is.null(subsetData)) {
+        subsetData <- subsetData@data
+      }
     }
+    
+    Observation.df <- droplevels(subsetData)
+    
+    # If there is more than one to generate, suffix the subset id
+    addSubsetId <-
+      ifelse(length(input$subsetReport) > 1, paste0("_", subsetId), "")
+    # Use the user provided name or the default one if it doesn't exists
+    
+    outputFile <- if (is.null(fileDest)) {
+      fileName <- ifelse(is.empty(input$reportFileName),
+                         DEFAULT_FILE_NAME,
+                         input$reportFileName)
+      paste0(fileName, addSubsetId, ".docx")
+    } else {
+      basename(fileDest)
+    }
+    
+    outputDir <-
+      ifelse(is.null(fileDest), "output", dirname(fileDest))
+    
+    loginfo("output File name: %s and dir: %s", outputFile, outputDir)
+    
+    # testmd(Observation.df)
+    
+    rmarkdown::render("Shiny_cruise_report2.Rmd",
+                      output_file = outputFile,
+                      output_dir = outputDir)
+    # list(name = outputFile, path = out, subset = subsetId)
   }
-  
-  Observation.df <- droplevels(subsetData)
-  
-  # If there is more than one to generate, suffix the subset id
-  addSubsetId <- ifelse(length(input$subsetReport) > 1, paste0("_", subsetId), "")
-  # Use the user provided name or the default one if it doesn't exists
-  fileName <- ifelse(is.empty(input$reportFileName), DEFAULT_FILE_NAME, input$reportFileName)
-  
-  outputFile <- paste0(fileName, addSubsetId,".docx")
-  
-  
-  loginfo("output File name: %s", outputFile)
-  
-  outputDir <- "output"
-  
-  # testmd(Observation.df)
-  
-  rmarkdown::render(
-    "Shiny_cruise_report2.Rmd",
-    output_file = outputFile,
-    output_dir = outputDir
-  )
-  
-}
 
-generateReports <- function(input, output, session, userInfo) {
-  lapply(input$subsetReport, generateReport, input, userInfo)
-}
+generateReports <-
+  function(subsets, input, userInfo, fileDest = NULL) {
+    lapply(subsets, generateReport, input, userInfo)
+  }
 
 compareReports <- function(input, output, session, userInfo) {
   
 }
 
+
 ################
 ### Observers
 ###############
 
+downloadZippedReports <- function(subsetIds, input, userInfo) {
+  downloadHandler(
+    filename = function() {
+      outputFile <- paste0(DEFAULT_FILE_NAME, "s_", Sys.Date(), ".zip")
+    },
+    content = function(file) {
+      out <- generateReports(subsetIds, input, userInfo)
+      zip(zipfile = file,
+          files = unlist(out),
+          extras = "-j")
+    },
+    contentType = "application/zip, application/octet-stream"
+  )
+}
+
+
+generateReportDownloadObservers <-
+  function(input, output, userInfo) {
+    print("generate download observers")
+    # Iterate on each subset to generate a download handler
+    lapply(getSubsets(userInfo), function(subset, input, output) {
+      subsetId <- getId(subset)
+      # get label and replace any space by underscore
+      subsetLabel <- gsub("\\s", "_", getLabel(subset))
+      output[[paste0("downloadReport", subsetId)]] <-
+        downloadHandler(
+          filename = function() {
+            fileName <-
+              ifelse(is.empty(input$reportFileName),
+                     DEFAULT_FILE_NAME,
+                     input$reportFileName)
+            outputFile <-
+              paste0(fileName, "_", subsetLabel, ".docx")
+          },
+          content = function(file) {
+            generateReport(subsetId, input, userInfo, file)
+          },
+          contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+    }, input, output)
+    # Generate a handler to download them all
+    output$downloadReportAll <-
+      downloadZippedReports(getSubsets(userInfo), input, userInfo)
+    output$downloadReportSelection <-
+      downloadZippedReports(input$reportSubset, input, userInfo)
+  }
+
 
 createReportObserver <- function(input, output, session, userInfo) {
-  observeEvent(input$createReport, {
+  observeEvent(input$showReportModal, {
+    userInfo$reports <- NULL
+    # Create observers to handle download
+    generateReportDownloadObservers(input, output, userInfo)
     showModal(createReportModal(input, output, session, userInfo))
   })
   
   
-  ## Create a new subset
   observeEvent(input$generateReport, {
-    if (input$reportType == TYPE_CREATE) {
-      generateReports(input, output, session, userInfo)
+    req(input$subsetReport)
+    if (input$downloadManually) {
+      generateReportDownloadObservers(input, output, userInfo)
     } else {
-      compareReports(input, output, session, userInfo)
+      # userInfo$reports <- if (input$reportType == TYPE_CREATE) {
+      #   generateReports(input, output, session, userInfo)
+      # } else {
+      #   compareReports(input, output, session, userInfo)
+      # }
     }
-    removeModal(session)
   })
   
-  observeEvent(input$reportType, {loginfo("type")})
+  observeEvent(input$exitReportModal, {
+    removeModal(session)
+  })
   
 }
 
@@ -105,12 +171,12 @@ createReportObserver <- function(input, output, session, userInfo) {
 
 
 createReportRender <- function(input, output, session, userInfo) {
-  output$reportButtons <- renderUI({
+  output$createReport <- renderUI({
     tagList(div(
       class = "reportButtons",
       actionButton(
         class = "reportButton",
-        "createReport",
+        "showReportModal",
         geti18nValue("create.report", userInfo$lang)
       )
     ))
@@ -133,34 +199,83 @@ createReportRender <- function(input, output, session, userInfo) {
       names(subsetChoices) <- getSubsetsLabels(subsets)
       
     })
-    tagList(selectizeInput(
-      "subsetReport",
-      geti18nValue("filter.choices.subset", userInfo$lang),
-      choices = subsetChoices,
-      multiple = TRUE
-    ),
-    textInput("reportAuthor", geti18nValue("report.author.name", userInfo$lang),
-              placeholder = geti18nValue("report.author.name.placeholder", userInfo$lang)),
-    textInput("reportFileName", geti18nValue("report.file.name", userInfo$lang),
-              placeholder = geti18nValue("report.file.name.placeholder", userInfo$lang)),
-    checkboxInput("askDownloadDest", geti18nValue("report.ask.dest", userInfo$lang)),
-    fileInput("reportDownload", geti18nValue("report.save.dest", userInfo$lang))
+    tagList(
+      textInput(
+        "reportAuthor",
+        geti18nValue("report.author.name", userInfo$lang),
+        placeholder = geti18nValue("report.author.name.placeholder", userInfo$lang)
+      ),
+      textInput(
+        "reportFileName",
+        geti18nValue("report.file.name", userInfo$lang),
+        placeholder = geti18nValue("report.file.name.placeholder", userInfo$lang)
+      ),
+      fluidRow(style = "margin-bottom: 10px;",
+        column(6, renderText(
+          i18nText("report.download.manually", userInfo$lang)
+        )),
+        column(
+          6,
+          textOutput2(
+            content = toupper(i18nText("text.or", userInfo$lang)),
+            inline = TRUE,
+            style = "font-weight: bold;"
+          ),
+          textOutput2(
+            content = i18nText("report.select.download", userInfo$lang),
+            inline = TRUE
+          )
+        )
+      ),
+      fluidRow(column(6,
+                      uiOutput(
+                        "reportDownloadList"
+                      )),
+               column(
+                 6,
+                 tagList(
+                   selectizeInput(
+                     "subsetReport",
+                     geti18nValue("filter.choices.subset", userInfo$lang),
+                     choices = subsetChoices,
+                     multiple = TRUE
+                   ),
+                   downloadButton(
+                     "downloadReportSelection",
+                     geti18nValue("report.download.select", userInfo$lang)
+                   )
+                 )
+               ))
     )
     
   })
-
-  output$reportActionButtons <- renderUI({
-    div(
-      style = "text-align: right;",
-      actionButton(
-        "generateReport",
-        geti18nValue("report.generate", userInfo$lang)
-      ),
-      actionButton(
-        "cancelSubset",
-        geti18nValue("button.cancel", userInfo$lang)
+  
+  output$reportDownloadList <- renderUI({
+    tagList(div(
+      class = "downloadReportButtons",
+      lapply(getSubsets(userInfo), function(subset) {
+        downloadButton(paste0("downloadReport", getId(subset)),
+                       getLabel(subset),
+                       class = "downloadButton")
+      }),
+      downloadButton(
+        "downloadReportAll",
+        geti18nValue("report.download.all", userInfo$lang),
+        class = "downloadButton"
       )
-    )
+    ))
+  })
+  
+  output$reportActionButtons <- renderUI({
+    div(style = "text-align: right; margin-top:20px;",
+        # actionButton(
+        #   "generateReport",
+        #   geti18nValue("report.generate", userInfo$lang)
+        # ),
+        actionButton(
+          "exitReportModal",
+          geti18nValue("button.exit", userInfo$lang)
+        ))
   })
   
   output$compareReportOptions <- renderUI({
@@ -192,4 +307,3 @@ createReportModal <- function(input, output, session, userInfo) {
     easyClose = TRUE
   )
 }
-

@@ -61,6 +61,15 @@ div.outer {
   background-color: #4d90fe;
 }
 
+.downloadReportButtons {
+  display : flex;
+  flex-direction: column;
+  align-items : flex-start;
+}
+
+.downloadButton {
+  margin-top : 15px;
+}
 
 .selector {
   border: 1px solid #ccc;

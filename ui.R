@@ -9,6 +9,6 @@ shinyUI(fluidPage(
   column(2, uiOutput("changeLang"))),
   fluidRow(
     div(class = "chooseOptions",
-        uiOutput("subsetOptions"))),
-  fluidRow(uiOutput("reportButtons"))
+        uiOutput("subsetFilters"))),
+  fluidRow(uiOutput("createReport"))
 ))

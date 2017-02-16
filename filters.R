@@ -89,7 +89,7 @@ selectDataFiltersObservers <- function(input, output, session, userInfo) {
 ## Main display for all filters
 selectDataFiltersRender <- function(input, output, session, userInfo) {
   ## Display everything
-  output$subsetOptions <- renderUI({
+  output$subsetFilters <- renderUI({
     isolate(tagList(
       column(4, 
              uiOutput("selectObserver"),
