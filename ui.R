@@ -3,12 +3,9 @@ library(leaflet)
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
-  includeCSS("www/assets/css/styles.css"),
+  includeCSS("www/css/styles.css"),
   fluidRow(class = "topRow",
   column(10, uiOutput("subsetTabs")),
-  column(2, uiOutput("changeLang"))),
-  fluidRow(
-    div(class = "chooseOptions",
-        uiOutput("subsetFilters"))),
-  fluidRow(uiOutput("createReport"))
+  column(2, uiOutput("changeLanguage"))),
+  uiOutput("pageContent")
 ))
