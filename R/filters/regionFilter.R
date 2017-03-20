@@ -88,7 +88,8 @@ regionFilterEventHandler <-
       userInfo$redrawMap <- userInfo$redrawMap + 1
     }
     if (event$type == CHANGE_LANG_EVENT ||
-        (event$type == CHANGE_PAGE_EVENT)) {
+        (event$type == CHANGE_PAGE_EVENT) ||
+        userInfo$page != SELECTION_PAGE) {
       #&& userInfo$page != SELECTION_PAGE)) {
       return()
     }

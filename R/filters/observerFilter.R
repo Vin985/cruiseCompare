@@ -206,14 +206,14 @@ selectObserverObserver <-
         # Update list of cruises
         updateCruisesInput(input$observer, session, userInfo)
       }
-    }, ignoreNULL = FALSE)
+    }, ignoreNULL = FALSE, ignoreInit = TRUE)
     
     
     ## Cruise selection has changed
     observeEvent(input$cruises, {
       # add cruise filter
       addObserverFilter(input$cruises, TYPE_CRUISE, userInfo)
-    }, ignoreNULL = FALSE)
+    }, ignoreNULL = FALSE, ignoreInit = TRUE)
     
     
     # ## Update inputs labels if language changes

@@ -103,7 +103,8 @@ LANG_DATA <- loadLanguages(file.path(ASSETS_DIR, "lang.csv"))
 PROJ_AREA <-
     "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-
+LAND_MAP_LAYER <- "ne_10m_land"
+LAND_MAP_SHP <- readOGR(MAPS_DIR, LAND_MAP_LAYER)
 
 ### Extract ECSAS Data
 # ECSAS_DATA_PATH <- file.path(DATA_DIR, "ECSAS")

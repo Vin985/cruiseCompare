@@ -43,6 +43,7 @@ setMisc <- function(subset, id, value) {
   subset
 }
 
+
 ## Create new subset
 createSubset <- function(userInfo, label = NULL) {
   # Check if subsets is initialized
@@ -125,8 +126,8 @@ setSubset <- function(subset, userInfo) {
 
 
 ## Get Subset data by subsetId
-getSubsetData <- function(subsetId, userInfo, as.df = FALSE, type = "raw") {
-  subsetData <- extractInfoBySubsetId(userInfo, subsetId, "subsetData")
+getSubsetData <- function(subsetId, userInfo, as.df = FALSE, type = "raw", isolate = TRUE) {
+  subsetData <- extractInfoBySubsetId(userInfo, subsetId, "subsetData", isolate)
   data <- subsetData[[type]]
   if (type == "raw" && as.df && !is.null(data@data)) {
     data <- data@data
@@ -165,16 +166,19 @@ getCurrentData <- function(userInfo, as.df = TRUE) {
   }
 }
 
-getDistanceAnalysis <- function(subsetId, userInfo){
-  getSubsetData(subsetId, userInfo, type = "distance")
+
+getDistanceAnalysis <- function(subsetId, userInfo, isolate = TRUE){
+  getSubsetData(subsetId, userInfo, type = "distance", isolate)
 }
 
-getAnalyzedData <- function(subsetId, userInfo){
-  getSubsetData(subsetId, userInfo, type = "analyzed")
+
+getAnalyzedData <- function(subsetId, userInfo, isolate = TRUE){
+  getSubsetData(subsetId, userInfo, type = "analyzed", isolate)
 }
 
-getCurrentAnalyzedData <- function(userInfo){
-  getSubsetData(NULL, userInfo, type = "analyzed")
+
+getCurrentAnalyzedData <- function(userInfo, isolate = TRUE){
+  getSubsetData(NULL, userInfo, type = "analyzed", isolate)
 }
 
 ## Add a filter to a subset

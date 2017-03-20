@@ -302,7 +302,7 @@ getDensityModel <-
 getDensities <- function(model) {
   stratums <- model$density_estimate$Stratum
   densities <-
-    stratums[stratums$Parameters == "D", c("Stratum", "Estimates", "% of var.")]
+    stratums[stratums$Parameters == "D", c("Stratum", "Estimates", "SE", "% of var.")]
   names(densities) <- c("ID", "Estimates", "CoefVar")
   
   # save shp - grid + data associated to cells
@@ -311,12 +311,21 @@ getDensities <- function(model) {
 
   densities  
 }
-  
 
-mapDensitiesToGrid <- function(densityModel) {
-  
-  densities <- getDensities(densityModel$model)
-  grid <- densityModel$grid
+
+compareDensities <- function(model1, model2) {
+ 
+  d1 <- getDensities(model1$model)
+  d2 <- getDensities(model2$model)
+  d <- merge(d1, d2, by = "ID", all = TRUE)
+  d$Estimates <- d$Estimates.x - d$Estimates.y
+  d
+}
+
+mapDensitiesToGrid <- function(densities, grid) {
+  # browser()
+  # densities <- getDensities(densityModel$model)
+  # grid <- densityModel$grid
   
   # join estimates to shp cells
   idx <- match(grid$ID, densities$ID)
@@ -324,7 +333,7 @@ mapDensitiesToGrid <- function(densityModel) {
   row.names(temp) <- row.names(grid)
   grid@data <- join(grid@data, temp, by = "ID")
   
-  # browser()
+  browser()
   
   # Remove unvisited cells
   estimates <- grid$Estimates[!is.na(grid$Estimates)]
@@ -348,7 +357,7 @@ mapDensitiesToGrid <- function(densityModel) {
 
 getBreaks <- function(densities, maxDensity) {
   #select variable to map
-  temp <- densities[!is.na(densities$Estimates) & densities$Estimates > 0, ]
+  temp <- densities[!is.na(densities$Estimates), ]
   breaks <- quantile(temp$Estimates, c(0, .5, .75, .95))
   
   #needed for data below first rounded class
@@ -382,11 +391,13 @@ getPaletteColors <- function(breaks) {
   palette
 }
 
+plotDensityModel <- function(densityModel, ...) {
+  plotDensityMap(getDensities(densityModel$model), densityModel$transects,
+                 densityModel$grid, ...)
+}
 
-plotDensityMap <- function(densityModel, shpm = NULL, ...) {
-  transects <- densityModel$transects
-  # browser()
-  res <- mapDensitiesToGrid(densityModel)
+plotDensityMap <- function(densities, transects, grid, shpm = NULL, ...) {
+  res <- mapDensitiesToGrid(densities, grid)
   
   grid <- res$grid
   unvisited <- res$unvisited
@@ -394,11 +405,11 @@ plotDensityMap <- function(densityModel, shpm = NULL, ...) {
   
   # Earth background
   if (is.null(shpm)) {
-    shpm <- readOGR(MAPS_DIR, "ne_10m_land")
+    shpm <- readOGR(MAPS_DIR, LAND_MAP_LAYER)
   }
   
   # make sure data and map have the same projection
-  prj <- proj4string(transects)
+  prj <- proj4string(grid)
   shpm <- spTransform(shpm, CRS(prj))
   
   
@@ -429,13 +440,15 @@ plotDensityMap <- function(densityModel, shpm = NULL, ...) {
     border = "darkkhaki",
     axes = T
   )
-  plot(
-    transects,
-    col = "black",
-    pch = 16,
-    cex = .5,
-    add = T
-  )
+  if (!is.null(transects)) {
+    plot(
+      transects,
+      col = "black",
+      pch = 16,
+      cex = .5,
+      add = T
+    )
+  }
   legend(
     "bottomright",
     bty = "n",

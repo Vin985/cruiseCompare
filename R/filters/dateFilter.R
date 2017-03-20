@@ -224,29 +224,29 @@ selectDateObserver <-
       } else {
         addDateFilter(NULL, type = TYPE_YEARS, userInfo)
       }
-    })
+    }, ignoreInit = TRUE)
     
     ## Remove all months if no restriction
     observeEvent(input$restrictDate, {
       if (!input$restrictDate) {
         addDateFilter(NULL, type = TYPE_MONTHS, userInfo)
       }
-    })
+    }, ignoreInit = TRUE)
     
     ## Add range filter
     observeEvent(input$dateRange, {
       addDateFilter(input$dateRange, type = TYPE_RANGE, userInfo)
-    })
+    }, ignoreInit = TRUE)
     
     ## Add years filter
     observeEvent(input$dateYears, {
       addDateFilter(input$dateYears, type = TYPE_YEARS, userInfo)
-    }, ignoreNULL = FALSE)
+    }, ignoreNULL = FALSE, ignoreInit = TRUE)
     
     ## Add months filter
     observeEvent(input$dateMonths, {
       addDateFilter(input$dateMonths, type = TYPE_MONTHS, userInfo)
-    }, ignoreNULL = FALSE)
+    }, ignoreNULL = FALSE, ignoreInit = TRUE)
     
     
     # ## Data has been subsetted, update date selection

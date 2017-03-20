@@ -129,7 +129,7 @@ selectSpeciesObserver <-
     ## Update choices list if names are selected
     observeEvent(input$useNames, {
       updateSpeciesInput(input, session, userInfo)
-    })
+    }, ignoreInit = TRUE)
     
     
     ## If species are selected, add to selection
@@ -137,7 +137,7 @@ selectSpeciesObserver <-
                  {
                    addSpeciesFilter(input$speciesFilter, userInfo)
                  },
-                 ignoreNULL = FALSE)
+                 ignoreNULL = FALSE, ignoreInit = TRUE)
     
     
     # ## Update species selection based on current subset

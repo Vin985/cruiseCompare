@@ -47,24 +47,24 @@ div.outer {
 }
 
 .dataTabs {
-  border-bottom : solid 1px black;
+  border-bottom : solid 1px #ccc;
   margin: 15px auto;
   line-height : normal;
 }
 
 .dataTabs span {
-  border: 1px solid #aa2b1c;
+  /* border: 1px solid #aa2b1c;*/
   border-bottom: none;
   border-radius: 4px 4px 0 0;
   margin: 0;
   padding: 5px 15px 6px;
-  background-color: #aa2b1c;
+  /*  background-color: #aa2b1c; */
 }
 
 .dataTabs input[type="radio"]:checked + span {
-    color: #aa2b1c;
-    border: solid #aa2b1c 1px;
-    border-bottom : none;
+  /*   color: #aa2b1c; */
+  /*  border: solid #aa2b1c 1px;*/
+    border-bottom : none; 
 }
 
 .topRow {
