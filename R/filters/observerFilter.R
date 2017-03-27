@@ -215,27 +215,6 @@ selectObserverObserver <-
       addObserverFilter(input$cruises, TYPE_CRUISE, userInfo)
     }, ignoreNULL = FALSE, ignoreInit = TRUE)
     
-    
-    # ## Update inputs labels if language changes
-    # observeEvent(userInfo[[CHANGE_LANG_EVENT]], {
-    #   loginfo("changing language")
-    #   updateObserverInput(session, userInfo, updateChoices = FALSE)
-    # })
-    # 
-    # 
-    # ## Update selections if subset changes
-    # observeEvent(userInfo[[CHANGE_SUBSET_EVENT]], {
-    #   loginfo("changing subset")
-    #   updateObserverInput(session, userInfo)
-    # })
-    # 
-    # 
-    # ## Update inputs if data is subsetted
-    # observeEvent(userInfo[[SUBSET_DATA_EVENT]], {
-    #   loginfo("subsetting Data")
-    #   setObserverList(userInfo)
-    #   updateObserverInput(session, userInfo)
-    # })
   }
 
 

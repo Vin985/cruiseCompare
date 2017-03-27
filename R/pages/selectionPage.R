@@ -11,7 +11,11 @@ selectionPage <- function(input, output, session, userInfo) {
   selectionPageUI(input,output,userInfo)
 
   observeEvent(input$viewDataAction, {
+    # load("savedSubsets.Rdata")
+    # userInfo$subsets <- ss
     filterSubsets(userInfo)
+    # reset all distance analysis
+    userInfo$distance <- NULL 
     changePage(VIEW_DATA_PAGE, userInfo)
   })
 
@@ -33,11 +37,6 @@ selectionPageUI <- function(input,output,userInfo) {
         class = "actionButton",
         "viewDataAction",
         geti18nValue("view.data", userInfo$lang)
-      ),
-      actionButton(
-        class = "actionButton",
-        "showReportModal",
-        geti18nValue("create.report", userInfo$lang)
       )
     ))
   })

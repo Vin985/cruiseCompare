@@ -120,6 +120,35 @@ getCurrentCondition <- function(userInfo, type) {
 }
 
 
+## Get the values of the filters and convert them in a single
+## string if they are of atomic type
+getConditionValues <- function(condition) {
+  ## Create a single string with values
+  if (is.atomic(condition)) {
+    return(paste0(condition, collapse = "; "))
+  } else {
+    ## For non atomic types (e.g: region selection)
+    return("")
+  }
+}
+
+## Get data from filter conditions
+getFilterData <- function(filter) {
+  condition <- getCondition(filter)
+  values <- lapply(condition, getConditionValues)
+  names(values) <- names(condition)
+  return(values)
+}
+
+## Get filter values for display
+getFilterValues <- function(subset, userInfo) {
+  filters <- getFiltersBySubset(subset, userInfo)
+  filters <- filters[sort(names(filters))]
+  values <- lapply(filters, getFilterData)
+  names(values) <- names(filters)
+  unlist(values)
+}
+
 ## Return the selection defined by selectionType in a filter
 getFilterSelection <-
   function(userInfo,

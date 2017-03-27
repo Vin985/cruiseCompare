@@ -104,7 +104,7 @@ displayMarkers <- function(map, data) {
   if (!is.empty(data)) {
     addCircleMarkers(
       map,
-      data = data,
+      data = data[!is.na(data$Count), ],
       lng = ~ LongStart,
       lat = ~ LatStart,
       radius = 2,
@@ -157,11 +157,6 @@ updateMap <- function(userInfo) {
 
 ## Main observer function for region selection. All observers are defined here
 selectRegionObserver <- function(input, output, session, userInfo) {
-  ## Check if data has changed and update map
-  # observeEvent(userInfo[[SUBSET_DATA_EVENT]], {
-  #   updateMap(userInfo)
-  # })
-  
   
   ## Check if map selection has been made
   observeEvent(input$regionMap_draw_all_features, {
@@ -169,11 +164,6 @@ selectRegionObserver <- function(input, output, session, userInfo) {
     addRegionFilter(selections, userInfo)
   })
   
-  
-  # ## Update selections if subset changes
-  # observeEvent(userInfo[[CHANGE_SUBSET_EVENT]], {
-  #   updateMap(userInfo)
-  # })
 }
 
 

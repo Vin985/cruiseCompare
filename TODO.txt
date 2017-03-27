@@ -1,0 +1,38 @@
+
+General
+--------
+
+- Changer le nom des subsets apres creation
+- Ajouter un avertissement de ralentissement si le nombre d'observations est trop grand
+- Assurer une navigation fluide (garder en memoire les informations de l'utilisateur) 
+
+Filtres
+--------
+- Date
+  - Ajouter une sous-periode
+- Changer la facon dont les donnees sont selectionnees
+
+
+Visualisation des donnees
+--------------------------
+
+- Mettre a jour l'information de subsets
+- message d'erreur si erreur due a Distance
+
+
+Comparaison de rapports
+-------------------------
+
+- Ajouter des regles de comparaison?
+- Creation de rapport
+- Legende: nom subsets dynamique
+- changer couleur des points
+- Ajouter le 0 pour les rapports seuls
+
+
+
+
+Bugs 
+-----
+
+

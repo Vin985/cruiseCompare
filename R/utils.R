@@ -145,3 +145,5 @@ changePage <- function(page, userInfo) {
   userInfo$page <- page
   launchEvent(CHANGE_PAGE_EVENT, userInfo)
 }
+
+

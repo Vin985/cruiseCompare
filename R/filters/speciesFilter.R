@@ -27,7 +27,37 @@ initSpeciesFilter <- function(input, output, session, userInfo) {
 speciesFilter <- function(data, condition) {
   loginfo("Filtering by species with species: %s", condition)
   if (length(condition) > 0) {
-    data <- data[data$Alpha %in% condition[[TYPE_SPECIES]], ]
+    
+    # get all watch ids to calculate the effort
+    nodup <- data[!duplicated(data@data[, "WatchID"]), ]
+    
+    # get all data concerning selected species
+    temp <- data[data$Alpha %in% condition[[TYPE_SPECIES]], ]
+    
+    # Reset everything
+    nodup$Count <- NA
+    nodup$Alpha <- ""
+    nodup$Distance <- NA
+    
+    # Remove all watches where the selected species were seen
+    tmpid <- unique(temp$WatchID)
+    nodup <- nodup[!nodup$WatchID %in% tmpid, ]
+    
+    # Add selected species
+    data <- rbind(nodup, temp)
+    
+    # get watchIds where the selected species were observed
+    # m <- match(nodup$WatchID, temp$WatchID)
+    
+    # Add species names and count to the watches
+    # nodup$Count[!is.na(m)] <- temp$Count[m[!is.na(m)]]
+    # nodup$Alpha[!is.na(m)] <- temp$Alpha[m[!is.na(m)]]
+    # nodup$Alpha[!is.na(m)] <- temp$Distance[m[!is.na(m)]]
+    
+    
+    # data$Count[data$Alpha %in% condition[[TYPE_SPECIES]]] <- 0
+    
+    # data <- nodup
   }
   return(data)
 }
@@ -52,10 +82,11 @@ addSpeciesFilter <- function(selections, userInfo) {
 
 speciesFilterEventHandler <- function(input, output, session, userInfo) {
   event <- isolate(userInfo$event) 
-  if (event$type == CHANGE_LANG_EVENT){
+  if (event$type == CHANGE_LANG_EVENT || event$type == CHANGE_PAGE_EVENT){
     ## Update checkbox label
     updateCheckboxInput(session,
                         "useNames",
+                        value = session$userData$useSpeciesNames,
                         label = geti18nValue("species.use.common.name", userInfo$lang))
   }
    updateSpeciesInput(input, session, userInfo)
@@ -90,6 +121,7 @@ getSpeciesChoices <- function(userInfo, useNames) {
   choices <- as.list(names$Alpha)
   names(choices) <- labels
   
+  return(list(NOGA = "NOGA"))
   return(choices)
 }
 
@@ -129,40 +161,14 @@ selectSpeciesObserver <-
     ## Update choices list if names are selected
     observeEvent(input$useNames, {
       updateSpeciesInput(input, session, userInfo)
+      session$userData$useSpeciesNames <- input$useNames
     }, ignoreInit = TRUE)
     
     
     ## If species are selected, add to selection
-    observeEvent(input$speciesFilter,
-                 {
-                   addSpeciesFilter(input$speciesFilter, userInfo)
-                 },
-                 ignoreNULL = FALSE, ignoreInit = TRUE)
-    
-    
-    # ## Update species selection based on current subset
-    # observeEvent(userInfo[[SUBSET_DATA_EVENT]], {
-    #   updateSpeciesInput(input, session, userInfo)
-    # })
-    # 
-    # 
-    # ## Update species selection based on current subset
-    # observeEvent(userInfo[[CHANGE_SUBSET_EVENT]], {
-    #   updateSpeciesInput(input, session, userInfo)
-    # })
-    # 
-    # 
-    # ## Update inputs labels if language change
-    # observeEvent(userInfo[[CHANGE_LANG_EVENT]], {
-    #   ## Update checkbox label
-    #   updateCheckboxInput(session,
-    #                       "useNames",
-    #                       label = geti18nValue("species.use.common.name", userInfo$lang))
-    #   
-    #   ## Update select box labels and choices list
-    #   updateSpeciesInput(input, session, userInfo)
-    # })
-    
+    observeEvent(input$speciesFilter, {
+      addSpeciesFilter(input$speciesFilter, userInfo)
+    }, ignoreNULL = FALSE, ignoreInit = TRUE)
   }
 
 
@@ -174,6 +180,7 @@ selectSpeciesObserver <-
 
 ## Main render function for species selection. All UI render function are here
 selectSpeciesRender <- function(input, output, session, userInfo) {
+  session$userData$useSpeciesNames <- FALSE
   ## Species title
   output$speciesTitle <- renderUI({
     h4(geti18nValue("title.species", userInfo$lang))
@@ -188,7 +195,7 @@ selectSpeciesRender <- function(input, output, session, userInfo) {
             checkboxInput(
               "useNames",
               label = geti18nValue("species.use.common.name", userInfo$lang),
-              value = FALSE
+              value = session$userData$useSpeciesNames
             ),
             selectizeInput(
               "speciesFilter",

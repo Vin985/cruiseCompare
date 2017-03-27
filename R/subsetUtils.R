@@ -217,3 +217,12 @@ getSubsetsLabels <- function(subsets) {
     return(getLabel(x))
   }))
 }
+
+## Return a vector of subset labels
+getSubsetLabelsById <- function(subsetIds, userInfo) {
+  r <- unlist(lapply(subsetIds, function(x, userInfo) {
+    s <- getSubset(x, userInfo)
+    return(getLabel(s))
+  }, userInfo))
+  r
+}

@@ -12,6 +12,10 @@ div.outer {
 }*/
 
 
+.flex {
+  display : flex;
+}
+
 .dataAction h5 {
   margin-bottom : 20px;
 }
@@ -77,7 +81,7 @@ div.outer {
   border-bottom: 1px solid #ccc;
 }
 
-.subsetLink{
+.subsetLink {
   border: 1px solid #ccc;
   border-radius: 4px 4px 0 0;
   font-size: 18px;
@@ -100,6 +104,22 @@ div.outer {
   padding : 30px 15px;
   width : 95%;
 }
+
+.selectSubsetsCompare {
+  display : flex;
+  margin-top: 15px;
+  margin-bottom: 30px;
+}
+
+.compareSubsetButton {
+  display : flex;
+  justify-content : flex-end;
+}
+
+.compareSubsetButton .actionButtons {
+  padding : 15px 15px;
+}
+
 
 .actionButton {
   border: 0;
@@ -126,6 +146,17 @@ div.outer {
 
 .downloadButton {
   margin-top : 15px;
+}
+
+.gridSize {
+  display: flex;
+  width: 200px;
+  justify-content : flex-startl;
+  align-items : center;
+}
+
+.gridSize input[type="number"]{
+  max-width: 90%;
 }
 
 .selector {

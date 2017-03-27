@@ -3,6 +3,8 @@
 
 
 
+
+
 ## Page Id
 VIEW_DATA_PAGE <- "viewData"
 
@@ -22,129 +24,14 @@ ROUND_COLUMNS <- list(
 )
 
 
+
 viewDataPage <- function(input, output, session, userInfo) {
-  
   # Change Page
   observeEvent(input$selectionPageAction, {
     changePage(SELECTION_PAGE, userInfo)
   }, ignoreInit = TRUE)
   
-  # display density map
-  observeEvent(input$displayDensityMap, {
-    subsetId <- getCurrentSubsetId(userInfo)
-    # perform distance analysis for current subset
-    userInfo$subsetData[[subsetId]]$distance <-
-      getDistanceAnalysis(subsetId, userInfo)
-  }, ignoreInit = TRUE)
-  
-  # Are we in comparison page?
-  isCompare <- reactive({
-    action <- input$dataAction
-    (!is.null(action) && action == DATA_ACTION_COMPARE)
-  })
-  
-  # Get Selected subsets
-  distanceSubsets <- reactive({
-    subsetIds <- if (isCompare()) {
-      loginfo("retrieving subsets compare")
-      isolate(input$subsetDensityCompare)
-    } else {
-      loginfo("retrieving subsets view %s", names(userInfo$subsets))
-      names(userInfo$subsets)
-      # getCurrentSubsetId(userInfo, isolate = FALSE)
-    }
-    subsetIds
-  })
-  
-  # get data for distance analysis
-  distanceData <- reactive({
-    loginfo("retrieving data")
-    # Get selected subsets
-    subsetIds <- isolate(distanceSubsets())
-    # create one table for all subsets
-    data <-
-      do.call(rbind, lapply(subsetIds, function(id, userInfo) {
-        d <- getSubsetData(id, userInfo, as.df = TRUE, isolate = FALSE)
-        # add a subset column
-        d$subset <- id
-        d
-      }, userInfo))
-    # convert to data.table
-    data <- data.table(data)
-  })
-  
-  # get transects for distance analysis
-  distanceTransects <- reactive({
-    loginfo("retrieving transects")
-    getTransects(distanceData())
-  })
-  
-  # generate distance models for all subsets
-  distanceModels <- reactive({
-    loginfo("retrieving models")
-    data <- distanceData()
-    transects <- distanceTransects()
-    subsetIds <- isolate(distanceSubsets())
-    grid <- createGrid(transects)
-    # generate distance model for each subset
-    models <- lapply(subsetIds, function(id, data, grid, userInfo) {
-      d <- data[subset == id]
-      detectionModel <- getDetectionModel(d)
-      densityModel <-
-        getDensityModel(d, grid, detectionModel$estimator)
-      list(detection = detectionModel, density = densityModel)
-    }, data, grid, userInfo)
-    names(models) <- subsetIds
-    models
-  })
-  
-  # generate comparison model
-  compareModel <- eventReactive(input$compareSubsetAction, {
-    validate(need(
-      length(input$subsetDensityCompare) > 1,
-      geti18nValue("need.more.subsets", userInfo$lang)
-    ))
-    ids <- isolate(input$subsetDensityCompare)
-    models <- distanceModels()
-    model1 <- models[[ids[1]]]$density
-    model2 <- models[[ids[2]]]$density
-    newDensities <- compareDensities(model1, model2)
-    list(densities = newDensities, grid = model1$grid)
-  }, ignoreInit = TRUE)  
-  
-  # Display the density map
-  output$densityMap <- renderPlot({
-    
-    compare <- isCompare()
-    loginfo("rendering plot")
-    if (compare ||
-        input$showDataType == DENSITY_MAP) {
-      
-      withProgress(
-        message = 'Calculation in progress',
-        detail = 'This may take a while...',
-        style = "old",
-        value = 0,
-        {
-          # subset comparison
-          if (compare) {
-            # If we compare subset, make sure we have at least 2 subsets selected
-            model <- compareModel()
-            # only display if the button has been clicked
-            if (is.empty(model)) {
-              return()
-            }
-            plotDensityMap(densities = model$densities, grid = model$grid, 
-                           transects = NULL, shpm = LAND_MAP_SHP)
-          } else {
-            subsetId <- getCurrentSubsetId(userInfo, isolate = FALSE)
-            model <- distanceModels()[[subsetId]]
-            plotDensityModel(model$density, shpm = LAND_MAP_SHP)
-          }
-        }
-      )
-    }
-  })
+  densityMap(input, output, session, userInfo)
   
   viewDT <- reactive({
     # Get a dependency on current subsetId
@@ -197,24 +84,12 @@ viewDataUI <- function(input, output, session, userInfo) {
   
   # Information about the subset filters
   output$subsetInfo <- renderUI({
-    userInfo$event
-    values <- getFilterValues(input$subsetFilterChoices, userInfo)
-    tagList(h5(geti18nValue("subset.info", userInfo$lang)),
-            lapply(names(values), function(id) {
-              value <- values[id]
-              div(
-                textOutput2(
-                  content = paste0(geti18nValue(
-                    paste0("filter.", id), userInfo$lang
-                  ), ": "),
-                  inline = TRUE
-                ),
-                textOutput2(
-                  content = paste0(value, collapse = "; "),
-                  inline = TRUE
-                )
-              )
-            }))
+    action <- input$dataAction
+    if (is.null(action) || action == DATA_ACTION_VIEW) {
+      displaySubsetInfo(getCurrentSubsetId(userInfo, isolate = FALSE), userInfo)
+    } else {
+      uiOutput("selectCompareSubsets")
+    }
   })
   
   # Action buttons: view data or compare subsets
@@ -311,15 +186,16 @@ viewDataUI <- function(input, output, session, userInfo) {
   # Density map
   output$showDensityMap <- renderUI({
     loginfo("show Density map UI")
-    tagList(fluidRow(column(
-      10, offset = 1, plotOutput("densityMap", height = "600px")
-    )))
+    tagList(fluidRow(uiOutput("densityMapOptions")),
+            fluidRow(column(
+              6, offset = 3, plotOutput("densityMap", height = "600px")
+            )))
   })
   
   # Compare subsets
   output$compareData <- renderUI({
     loginfo("compare data UI")
-    tagList(fluidRow(uiOutput("selectCompareSubsets")))
+    tagList(uiOutput("showDensityMap"))
   })
   
   # Select subsets to compare
@@ -330,24 +206,10 @@ viewDataUI <- function(input, output, session, userInfo) {
       subsetChoices <- names(subsets)
       names(subsetChoices) <- getSubsetsLabels(subsets)
     })
-    tagList(
-      selectizeInput(
-        "subsetDensityCompare",
-        geti18nValue("compare.choices.subset", userInfo$lang),
-        choices = subsetChoices,
-        multiple = TRUE,
-        options = list(maxItems = 2)
-      ),
-      uiOutput("showDensityMap"),
-      fluidRow(div(
-        class = "actionButtons",
-        actionButton(
-          class = "actionButton",
-          inputId = "compareSubsetAction",
-          geti18nValue("compare.subsets", userInfo$lang)
-        )
-      ))
-    )
+    tagList(fluidRow(class = "selectSubsetsCompare",
+      selectSubsetCompare(1, subsetChoices, input, output, userInfo),
+      selectSubsetCompare(2, subsetChoices, input, output, userInfo)
+    ))
   })
   
   
@@ -367,4 +229,47 @@ viewDataUI <- function(input, output, session, userInfo) {
       )
     ))
   })
+  
+  
+}
+
+
+selectSubsetCompare <- function(idx, subsetChoices, input, output, userInfo) {
+  selectInputId <- paste0("selectCompareSubset", idx)
+  infoOutputId <- paste0("subsetInfoCompare", idx)
+  
+  ## Output
+  output[[infoOutputId]] <- renderUI({
+    div(displaySubsetInfo(input[[selectInputId]], userInfo))
+  })
+  
+  column(4,
+         tagList(
+           selectizeInput(
+             selectInputId,
+             geti18nValue(paste0("compare.choices.subset", idx), userInfo$lang),
+             choices = subsetChoices,
+             selected = subsetChoices[idx],
+             options = list(maxItems = 1)
+           ),
+           uiOutput(infoOutputId)
+         ))
+}
+
+displaySubsetInfo <- function(subsetId, userInfo) {
+  values <- getFilterValues(subsetId, userInfo)
+  tagList(h5(geti18nValue("subset.info", userInfo$lang)),
+          lapply(names(values), function(id) {
+            value <- values[id]
+            div(
+              textOutput2(
+                content = paste0(geti18nValue(paste0("filter.", id), userInfo$lang), ": "),
+                inline = TRUE
+              ),
+              textOutput2(
+                content = paste0(value, collapse = "; "),
+                inline = TRUE
+              )
+            )
+          }))
 }

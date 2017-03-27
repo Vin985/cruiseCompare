@@ -13,8 +13,6 @@ DISTANCE_ADJ_NAMES <-
     "cosinus",
     "polynomial")
 
-DENSITY_MAP_PROJ <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-LAMBERT_PROJ <- "+proj=lcc +lat_1=46 +lat_2=60 +lat_0=44 +lon_0=-68.5 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"
 
 
 getObserverNames <- function(observers) {
@@ -35,6 +33,20 @@ getObserverNames <- function(observers) {
 }
 
 
+getDistanceData <- function(subsetIds, userInfo) {
+  loginfo("retrieving data")
+  # create one table for all subsets
+  data <-
+    do.call(rbind, lapply(subsetIds, function(id, userInfo) {
+      d <- getSubsetData(id, userInfo, as.df = TRUE, isolate = FALSE)
+      # add a subset column
+      d$subset <- id
+      d
+    }, userInfo))
+  # convert to data.table
+  data <- data.table(data)
+}
+
 analyzeData <- function(data) {
   data <- droplevels(data)
   dt <- data.table(data)
@@ -46,24 +58,6 @@ analyzeData <- function(data) {
   ##adapt species names
   dt$English <- as.factor(dt$English)
   dt$Alpha <- as.factor(dt$Alpha)
-  
-  # if (length(grep("Genus", levels(Observation.df$English))) >= 1) {
-  #   index.genus <- grep("Genus", levels(Observation.df$English))
-  #   new.genus.labs <- sapply(1:length(index.genus), function(i) {
-  #     paste(strsplit(levels(Observation.df$English)[index.genus[i]], ": ")[[1]][2], "sp.", "")
-  #   })
-  #   levels(Observation.df$English)[index.genus] <- new.genus.labs
-  #   names(Observation.df$English)[index.genus] <-  new.genus.labs
-  # }
-  #
-  # if (length(grep("Family", levels(Observation.df$English))) >= 1) {
-  #   index.family <- grep("Family", levels(Observation.df$English))
-  #   new.family.labs <- sapply(1:length(index.family), function(i) {
-  #     paste(strsplit(levels(Observation.df$English)[index.family[i]], ": ")[[1]][2], "sp.", "")
-  #   })
-  #   levels(Observation.df$English)[index.family] <- new.family.labs
-  #   names(Observation.df$English)[index.family] <-  new.family.labs
-  # }
   
   ### Total densities
   total <- dt[, .(
@@ -96,6 +90,7 @@ analyzeData <- function(data) {
 
 
 getDetectionModel <- function(dt) {
+  loginfo("generating detection model")
   if (!is.data.table(dt)) {
     dt <- as.data.table(dt)
   }
@@ -132,14 +127,20 @@ getDetectionModel <- function(dt) {
   
   
   mod.selected <- which.min(sapply(1:length(all.dist), function(i) {
-      all.dist[[i]]$AIC[3]
-    }))
+    all.dist[[i]]$AIC[3]
+  }))
   
-  key <- sapply(strsplit(names(all.dist)[mod.selected], "_"), "[", 2)
-  exp <- sapply(strsplit(names(all.dist)[mod.selected], "_"), "[", 3)
+  key <-
+    sapply(strsplit(names(all.dist)[mod.selected], "_"), "[", 2)
+  exp <-
+    sapply(strsplit(names(all.dist)[mod.selected], "_"), "[", 3)
   estimator = list(c(key, exp))
-    
-  return(list(idx = mod.selected, model = all.sp.best, estimator = estimator))
+  
+  return(list(
+    idx = mod.selected,
+    model = all.sp.best,
+    estimator = estimator
+  ))
 }
 
 
@@ -163,36 +164,16 @@ getPredictionDF <- function(model) {
 }
 
 
-createGrid <- function(transect, size = 50000, hexgrid = TRUE, shpm = NULL) {
-  # create study area using a bounding box
-  b <- bbox(transect)
-  # need larger buffer than just min max, with 50 km grid cell
-  b[, 2] <-  b[, 2] + 1
-  b[, 1] <-  b[, 1] - 1
-  
-  # Build grid
-  grid <-
-    create.grid(
-      Latitude = c(b[2, 1], b[2, 2]),
-      Longitude = c(b[1, 1], b[1, 2]),
-      Grid.size = c(size, size),
-      Clip = F,
-      clip.shape = shpm,
-      projection = CRS(proj4string(transect)),
-      hexgrid = hexgrid
-    )
-  grid$ID <- paste("parc", grid$ID, sep = "")
-  grid
-}
 
-
-getTransects <- function(data, prj = DENSITY_MAP_PROJ) {
+getTransects <- function(data, prj = PROJ_AREA) {
   transects <- data[, .(lat = LatStart, lon = LongStart)]
   coordinates(transects) <- ~ lon + lat
   transects <- SpatialPointsDataFrame(transects, data = data)
   proj4string(transects) <- CRS(prj)
+  transects <- spTransform(transects, CRS(PROJ_LAEA))
   transects
 }
+
 
 
 getDensityModel <-
@@ -206,19 +187,20 @@ getDensityModel <-
     transects <- getTransects(data)
     
     # compute cell/zone area (km2) : needs lambert projection for distance
-    tmp <- spTransform(grid, CRS(LAMBERT_PROJ))
+    tmp <- spTransform(grid, CRS(PROJ_LAMBERT))
     area <- gArea(tmp, byid = T) / 1000000
     grid$km2 <- area
     
     # select visited cells and intersect with shp
-    grid2 <-
-      grid[apply(gIntersects(transects, grid, byid = TRUE), 1, any),]
+    inters <- gIntersects(transects, grid, byid = TRUE)
+    ingrid <- vapply(1:nrow(inters), function(idx) {any(inters[idx,])}, FALSE)
+    grid2 <- grid[ingrid, ]
     
     # Overlay transects and grid and attribute squares to observations
     x <- over(transects, grid2)
     data$square <- x$ID
     data$square_area <- x$km2
-    data <- data[!is.na(data$square),]
+    data <- data[!is.na(data$square), ]
     
     data$SMP_LABEL <-
       paste(data$CruiseID, data$Date, data$square, sep = "_")
@@ -244,10 +226,11 @@ getDensityModel <-
     # Aggregate observations by label
     dd <- d[, .(V1 = sum(Count, na.rm = TRUE)), by = SMP_LABEL]
     # get the label name for transect without observations
-    dd <- dd[V1 == 0,]
+    dd <- dd[V1 == 0, ]
     #keep only lines for empty transects or non-empty lines for non-empty transects
-    d <- d[(d$SMP_LABEL %in% dd$SMP_LABEL & !duplicated(d$SMP_LABEL)) |
-           (!d$SMP_LABEL %in% dd$SMP_LABEL & !(d$Alpha == "")),] 
+    d <-
+      d[(d$SMP_LABEL %in% dd$SMP_LABEL & !duplicated(d$SMP_LABEL)) |
+          (!d$SMP_LABEL %in% dd$SMP_LABEL & !(d$Alpha == "")), ]
     setkey(d, square)
     
     # distance sampling w/spatial stratification
@@ -275,7 +258,7 @@ getDensityModel <-
     
     #analyse - calcul des densites
     x <-
-      distance.wrap(
+      mcds.wrap(
         d,
         estimator = estimator,
         units = units,
@@ -295,7 +278,11 @@ getDensityModel <-
         verbose = FALSE
       )
     
-    return(list(model = x, grid = grid, transects = transects))
+    return(list(
+      model = x,
+      grid = grid,
+      transects = transects
+    ))
   }
 
 
@@ -303,18 +290,17 @@ getDensities <- function(model) {
   stratums <- model$density_estimate$Stratum
   densities <-
     stratums[stratums$Parameters == "D", c("Stratum", "Estimates", "SE", "% of var.")]
-  names(densities) <- c("ID", "Estimates", "CoefVar")
+  names(densities) <- c("ID", "Estimates", "SE", "CoefVar")
   
   # save shp - grid + data associated to cells
   densities$Estimates <- as.numeric(densities$Estimates)
   densities$CoefVar <- as.numeric(densities$CoefVar)
-
-  densities  
+  
+  densities
 }
 
 
 compareDensities <- function(model1, model2) {
- 
   d1 <- getDensities(model1$model)
   d2 <- getDensities(model2$model)
   d <- merge(d1, d2, by = "ID", all = TRUE)
@@ -322,150 +308,4 @@ compareDensities <- function(model1, model2) {
   d
 }
 
-mapDensitiesToGrid <- function(densities, grid) {
-  # browser()
-  # densities <- getDensities(densityModel$model)
-  # grid <- densityModel$grid
-  
-  # join estimates to shp cells
-  idx <- match(grid$ID, densities$ID)
-  temp <- densities[idx, ]
-  row.names(temp) <- row.names(grid)
-  grid@data <- join(grid@data, temp, by = "ID")
-  
-  browser()
-  
-  # Remove unvisited cells
-  estimates <- grid$Estimates[!is.na(grid$Estimates)]
-  unvisited <- grid[is.na(grid$Estimates), ]
-  
-  breaks <- getBreaks(densities, max(grid$Estimates, na.rm = TRUE))
-  # Find in which interval estimates are. Add 1 because 0 is an interval in itself
-  grid$classno <- findInterval(grid$Estimates, breaks) + 1
-  grid$classno[grid$Estimates == 0] <- 1
-  
-  tags <- getBreakTags(breaks)
-  grid$class <- tags[grid$classno]
-  
-  grid <- grid[order(grid$classno), ]
-  
-  grid$abundance <- grid$km2 * grid$Estimates
-  
-  return(list(breaks = breaks, grid = grid, univisited = unvisited))
-}
 
-
-getBreaks <- function(densities, maxDensity) {
-  #select variable to map
-  temp <- densities[!is.na(densities$Estimates), ]
-  breaks <- quantile(temp$Estimates, c(0, .5, .75, .95))
-  
-  #needed for data below first rounded class
-  breaks[1] <- 0
-  breaks[length(breaks) + 1] <- maxDensity + 0.1
-  breaks <- round(breaks, 1)
-  breaks
-}
-
-
-getBreakTags <- function(breaks) {
-  ##associate data w/breaks intervals
-  tags <- vector()
-  for (i in 1:length(breaks)) {
-    if (i == 1) {
-      tags[1] <- as.character(breaks[i])
-    } else {
-      tags[i] <- paste(" > ", breaks[i - 1], " - ", breaks[i], sep = "")
-    }
-  }
-  tags
-}
-
-
-getPaletteColors <- function(breaks) {
-  #colors for legend
-  br.palette <- colorRampPalette(c("green", "yellow", "red"), space = "rgb")
-  palette <- br.palette(n = length(breaks) - 1)
-  #ajout class 0
-  palette <- c("lightgray", palette)
-  palette
-}
-
-plotDensityModel <- function(densityModel, ...) {
-  plotDensityMap(getDensities(densityModel$model), densityModel$transects,
-                 densityModel$grid, ...)
-}
-
-plotDensityMap <- function(densities, transects, grid, shpm = NULL, ...) {
-  res <- mapDensitiesToGrid(densities, grid)
-  
-  grid <- res$grid
-  unvisited <- res$unvisited
-  breaks <- res$breaks
-  
-  # Earth background
-  if (is.null(shpm)) {
-    shpm <- readOGR(MAPS_DIR, LAND_MAP_LAYER)
-  }
-  
-  # make sure data and map have the same projection
-  prj <- proj4string(grid)
-  shpm <- spTransform(shpm, CRS(prj))
-  
-  
-  palette <- getPaletteColors(breaks)
-  classes <- unique(grid$class[!is.na(grid$class)])
-  
-  args <- list(...)
-  legendTitle <- ifelse(is.null(args$legendTitle), "birds/km2", args$legendTitle)
-  plot(
-    grid,
-    bg = "lightblue",
-    border = "darkgray",
-    axes = T,
-    cex.axis = 1.5
-  )
-  grid2 <- grid[!is.na(grid$class), ]
-  for (class in classes) {
-    tmp <- grid2[grid2$class == class, ]
-    plot(tmp,
-         col = palette[tmp$classno],
-         border = "darkgray",
-         add = T)
-  }
-  plot(
-    shpm,
-    add = T,
-    col = "darkkhaki",
-    border = "darkkhaki",
-    axes = T
-  )
-  if (!is.null(transects)) {
-    plot(
-      transects,
-      col = "black",
-      pch = 16,
-      cex = .5,
-      add = T
-    )
-  }
-  legend(
-    "bottomright",
-    bty = "n",
-    legend = getBreakTags(breaks),
-    fill = palette,
-    title = legendTitle,
-    cex = 1.5
-  )
-  legend(
-    "bottomleft",
-    bty = "n",
-    cex = 1.5,
-    legend = c("Locations of 5-min observation periods"),
-    col = "darkgray",
-    pch = 16
-  )
-  
-}
-  
-  

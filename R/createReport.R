@@ -258,10 +258,6 @@ createReportRender <- function(input, output, session, userInfo) {
   
   output$reportActionButtons <- renderUI({
         div(style = "text-align: right; margin-top:20px;",
-            # actionButton(
-            #   "generateReport",
-            #   geti18nValue("report.generate", userInfo$lang)
-            # ),
             actionButton(
                 "exitReportModal",
                 geti18nValue("button.exit", userInfo$lang)

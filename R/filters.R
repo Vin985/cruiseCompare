@@ -2,8 +2,9 @@
 ### Initialize
 ##################
 
-
-filterList <- c(OBSERVER_FILTER, SPECIES_FILTER, DATE_FILTER, REGION_FILTER)
+## List of filter. The order of the list determines the order the filters will be
+## applied
+filterList <- c(OBSERVER_FILTER, DATE_FILTER, REGION_FILTER, SPECIES_FILTER)
 
 ## Define all filters
 selectDataFilters <- function(input, output, session, userInfo) {
@@ -68,7 +69,6 @@ selectDataFiltersRender <- function(input, output, session, userInfo) {
     actionButton("subsetData", geti18nValue("data.subset", userInfo$lang)),
     actionButton("resetData", geti18nValue("reset.data.subset", userInfo$lang)))
   })
-
 }
 
 
