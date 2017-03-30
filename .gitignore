@@ -54,3 +54,5 @@ detection.png
 Fig4.png
 None
 analysis
+dest/figs
+assets/reports/*.md
