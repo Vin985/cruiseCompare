@@ -188,7 +188,7 @@ viewDataUI <- function(input, output, session, userInfo) {
     loginfo("show Density map UI")
     tagList(fluidRow(uiOutput("densityMapOptions")),
             fluidRow(column(
-              6, offset = 3, plotOutput("densityMap", height = "600px")
+              6, offset = 3, plotOutput("densityMap", height = "550px")
             )))
   })
   
@@ -234,22 +234,31 @@ viewDataUI <- function(input, output, session, userInfo) {
 }
 
 
-selectSubsetCompare <- function(idx, subsetChoices, input, output, userInfo) {
-  selectInputId <- paste0("selectCompareSubset", idx)
-  infoOutputId <- paste0("subsetInfoCompare", idx)
+selectSubsetCompare <- function(idx, subsetChoices, input, output, userInfo, reportId = NULL) {
+  selectInputId <- paste0("selectCompareSubset", reportId, idx)
+  infoOutputId <- paste0("subsetInfoCompare", reportId, idx)
   
   ## Output
   output[[infoOutputId]] <- renderUI({
     div(displaySubsetInfo(input[[selectInputId]], userInfo))
   })
+  sel <- idx
+  columnSize <- 4
+  if (!is.null(reportId)) {
+    selection <- input[[paste0("selectCompareSubset", idx)]]
+    if (!is.empty(selection)) {
+      sel <- which(subsetChoices == selection)
+    }
+    columnSize <- 6
+  }
   
-  column(4,
+  column(columnSize,
          tagList(
            selectizeInput(
              selectInputId,
              geti18nValue(paste0("compare.choices.subset", idx), userInfo$lang),
              choices = subsetChoices,
-             selected = subsetChoices[idx],
+             selected = subsetChoices[sel],
              options = list(maxItems = 1)
            ),
            uiOutput(infoOutputId)
@@ -257,6 +266,8 @@ selectSubsetCompare <- function(idx, subsetChoices, input, output, userInfo) {
 }
 
 displaySubsetInfo <- function(subsetId, userInfo) {
+  # Take a dependency on subset data
+  getSubsetData(subsetId, userInfo, isolate = FALSE)
   values <- getFilterValues(subsetId, userInfo)
   tagList(h5(geti18nValue("subset.info", userInfo$lang)),
           lapply(names(values), function(id) {

@@ -1,0 +1,121 @@
+```{r, echo=FALSE,warning=FALSE,message=FALSE,cache=FALSE}
+
+subsetData <- getSubsetData(subset, userInfo)
+analyzedData <- getAnalyzedData(subset, userInfo)
+
+total <- analyzedData$total
+birds <- analyzedData$birds
+birds <- birds[!is.na(English)]
+setkey(birds, Count)
+
+## Format date based on language
+locale <- geti18nValue(paste0("species.", userInfo$lang), userInfo$lang)
+old <- Sys.getlocale("LC_TIME")
+invisible(Sys.setlocale(category = "LC_TIME", locale = locale))
+startDate <- format(min(subsetData$Date), "%d %B")
+endDate <- format(max(subsetData$Date), "%d %B %Y")
+invisible(Sys.setlocale(category = "LC_TIME", locale = old))
+
+notEmpty <- total[Count > 0, sum(.N)]
+
+
+detection <- comparison$models[[subset]]$detection
+detectionModel <- detection$model
+
+density <- comparison$models[[subset]]$density
+
+```
+
+##Subset `r i`
+
+###Seabird Sightings
+
+We surveyed `r round(sum(total$WatchLenKm))` km of ocean from `r startDate` to `r endDate`. During the survey, a total of `r sum(total$Count, na.rm=T)` birds were observed in `r notEmpty` (`r round(notEmpty/nrow(total)*100)`%) of the `r nrow(total)` surveyed 5-min periods. The observations were distributed across `r nrow(birds)` species/genus (Table 1.`r i`) and flock size ranged from `r min(birds$Count, na.rm=T)` to `r max(birds$Count, na.rm=T)` birds.  
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE,cache=FALSE }
+
+table1.df <- birds[, .("Species" = get(locale), Flocks, Birds = Count, "Mean Flock Size" = meanFlock)]
+table1.df <- table1.df[order(-table1.df$Birds), ]
+
+```
+
+Table 1.`r i`: Numbers of flocks, total number of birds, and mean flock size by species for subset `r i`
+
+```{r, results='asis' , echo=FALSE, warning=FALSE, message=FALSE, fig.align='center',cache=FALSE }
+kable(table1.df, row.names = FALSE)
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE,cache=FALSE }
+
+maxFlock <- subsetData[which.max(subsetData$Count), ]
+
+topFlocks <- birds[order(-birds$Flocks), ][1:3, ]
+totalFlocks <- sum(birds$Flocks)
+
+flocks <- birds[order(-birds$meanFlock), ][1:3, ]
+flocks$sd <- round(flocks$sd, 2)
+
+topBirds <- birds[order(-birds$Count), ][1:3, ]
+totalBirds <- sum(birds$Count)
+
+```
+
+The `r topFlocks[[locale]][1]` was the most common species, accouting for `r round(topFlocks$Flocks[1]/totalFlocks*100,2)`% of the observed flocks (Table 1.`r i`), followed by the `r topFlocks[[locale]][2]` (`r round(topFlocks$Flocks[2]/totalFlocks*100,2)`%), and the `r topFlocks[[locale]][3]` (`r round(topFlocks$Flocks[3]/totalFlocks*100,2)`%).
+
+The largest flock observed was one of `r maxFlock[[locale]]`, numbering `r maxFlock$Count` individuals. Overall, `r flocks[[locale]][1]` showed the highest average flock size ($\bar{x}$ = `r flocks$meanFlock[1]`; sd=`r flocks$sd[1]`; Table 1.`r i`), followed by the `r flocks[[locale]][2]`($\bar{x}$ = `r flocks$meanFlock[2]`; sd=`r flocks$sd[2]`), and `r flocks[[locale]][3]`($\bar{x}$ = `r flocks$meanFlock[3]`; sd=`r flocks$sd[3]`).
+
+The `r topBirds[[locale]][1]` was the most abundant species (Table 1.`r i`), accounting for `r round(topBirds$Count[1]/totalBirds*100,2)`% of the birds observed (Table 1.`r i`), followed by the `r topBirds[[locale]][2]` (`r round(topBirds$Count[2]/totalBirds*100,2)`%) and the `r topBirds[[locale]][3]` (`r round(topBirds$Count[3]/totalBirds*100,2)`%).  
+
+###Seabird detection
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE,cache=FALSE, include=FALSE}
+
+model.names <- c("uniform","uniform","half-normal","half-normal","hazard rate","hazard rate")
+adj.names <- c("cosinus","polynomial","cosinus","hermite polynomial", "cosinus", "polynomial")
+
+pred.df <- data.frame(x = detectionModel$detection[['Global']][,'distance'],
+                      y = detectionModel$detection[['Global']][,'predicted'])
+
+table3.df <- detectionModel$parameter_estimates$Global[,-1]
+table3.df[, -1] <- round(table3.df[, -1], 2)
+p.line <- which(table3.df$Parameters == "p")
+
+###extract prediction
+table4.df <- detectionModel$density_estimate$Global
+table4.df[, -c(1, 2)] <- round(table4.df[, -c(1, 2)], 2)
+d.line <- which(table4.df$Parameters == "D")
+N.line <- which(table4.df$Parameters == "N")
+
+fig3 <- predicted_hist(detectionModel)
+
+detectionPath <- file.path(REPORT_FIGS_OUTPUT_DIR, 
+              paste0("detection_", subset, ".png"))
+png(detectionPath,
+    width = 480, height = 480, units = "px")
+print(fig3)
+invisible(dev.off())
+
+```
+![Figure 1.`r i`: Detection function of all species combined in function of the distance bins (line) with observations by distance bins for subset `r i`](`r detectionPath` "Detection Plot for subset `r i`")
+
+The distance sampling model best describing how the number of seabird observations varied with the perpendicular distance from the ship was a `r model.names[detection$idx]` with a `r adj.names[detection$idx]` adjustement. The estimated probability of detection was `r table3.df[p.line,2]` (95%CI:`r paste(table3.df[p.line,5],table3.df[p.line,6], sep=" - ")`; Figure 1.`r i`) within the 300 meter width of the transect. The model predicted a density of `r table4.df[d.line,3]` (95%CI:`r paste(table4.df[d.line,6],table4.df[d.line,7], sep=" - ")`) seabirds/$km^2$ along the ship path. Note that this model doesn't account for potential different detection probabilities among species or effects of daily conditions.    
+
+
+###Seabird distribution
+```{r, echo=FALSE, warning=FALSE, message=FALSE,cache=FALSE, include=FALSE}
+
+densityPath <- file.path(REPORT_FIGS_OUTPUT_DIR, 
+              paste0("density_", subset, ".png"))
+ ##plot map
+png(densityPath, width = 960, height = 960, antialias = "cleartype", units = "px")
+  new.grid2 <- plotDensityModel(density, shpm = LAND_MAP_SHP, lang = userInfo$lang,
+                                legendCex = 1.7, transectsCex = .4, transectsCol = "darkred")
+invisible(dev.off())
+ 
+```
+ ![Figure 2.`r i`: Seabird density by 50x50 km cell where observations were conducted, given the selected detection model](`r densityPath` "Distribution Plot for subset `r i`")
+ 
+Following the spatial post-stratification of the selected distance model, there were `r nrow(new.grid2[new.grid2$classno==2,])` grid cells with densities below the 50% quantile, `r nrow(new.grid2[new.grid2$classno==3,])` cell(s) between the latter and the 75% quantile, `r nrow(new.grid2[new.grid2$classno==4,])` cell(s) between the latter and the 95% quantile, and `r nrow(new.grid2[new.grid2$classno==5,])` cell(s) in the top 5% quantile (Fig. 2.`r i`). Given the visited cells corresponded to the study area, we estimated the total seabird population at `r sum(new.grid2@data$abun)` during the studied period.
+
+

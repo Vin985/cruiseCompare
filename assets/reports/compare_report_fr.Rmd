@@ -1,0 +1,119 @@
+---
+output: 
+  word_document:
+    fig_caption: yes
+params:
+  lang: fr
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r global options, include=FALSE}
+#set root directory
+#opts_knit$set(root.dir="//Client/U$/TEMP")
+```
+
+```{r,root, echo=FALSE,warning=FALSE,message=FALSE,cache=FALSE}
+library(ECSASconnect)
+library(R2MCDS)
+require(MASS)
+require(knitr)
+require(rgdal)
+library(png)
+library(grid)
+require(maptools)
+library(RColorBrewer) 
+library(dplyr)
+library(rgeos)
+
+comparison <- compareData$comparison
+
+# get subset Ids
+subsets <- comparison$subsets
+
+# Current date
+today <- Sys.Date()
+
+
+
+```
+
+## Rapport de comparaison d'observation d'oiseaux marins pélagiques 
+
+-------------------------
+
+```{r, subsetInfos, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE, results="asis"}
+cpt <- 1
+for (i in subsets) {
+  cat("**", geti18nValue("report.selected.filters", userInfo$lang), " ", cpt, " :**\n\n", sep = "")
+  values <- getFilterValues(i, userInfo)
+  l <- lapply(names(values), function(id) {
+            value <- values[id]
+            res <- paste0("**", geti18nValue(paste0("filter.", id), userInfo$lang), ":** ")
+            res <- paste0(res, paste0(value, collapse = "; "))
+          })
+  cat(paste(l, collapse = "  \n"))
+  cat("\n\n")
+  cat("\\\n")
+  cpt <- cpt + 1
+}
+
+```
+
+**Préparé par:** `r author`
+
+Environment Canada, Canadian Wildlife Service
+
+`r today`
+
+-------------------------
+
+
+##Résultats
+
+
+```{r testchild, echo=FALSE, include=FALSE}
+  out = NULL
+  for (i in seq_along(subsets)) {
+    subset <- subsets[i]
+    out <- c(out, knit_child(sprintf('cruise_info_%s.Rmd', params$lang)))
+  }
+```
+
+```{r, echo=FALSE, results="asis"}
+  cat(paste(out, collapse = '\n'))
+```
+
+
+
+```{r Map,echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE, include=FALSE}
+
+ ##plot map
+png(
+  file.path(REPORT_FIGS_OUTPUT_DIR, "distributionComparison.png"),
+  width = 960,
+  height = 960,
+  antialias = "cleartype",
+  units = "px"
+  )
+  plotDensityMap(
+              densities = comparison$densities,
+              grid = comparison$grid,
+              transects = NULL,
+              shpm = LAND_MAP_SHP,
+              lang = userInfo$lang,
+              subsetNames = c("Sous-ensemble 1", "Sous-ensemble 2"),
+              legendCex = 1.7
+            )
+  invisible(dev.off())
+  
+  
+```
+
+
+ ![Figure 3: Comparaison de la densité d'oiseaux marins dans des cellules de `r gridSize`x`r gridSize` km où les observations ont eu lieu, selon le modèle de détection choisi](`r file.path(REPORT_FIGS_OUTPUT_DIR, "distributionComparison.png")` "Graphique de comparaison de distribution entre les deux sous-ensembles")
+ 
+

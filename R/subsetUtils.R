@@ -143,8 +143,8 @@ getCurrentSubset <- function(userInfo) {
 
 
 ## Get the data for the current subset
-getCurrentSubsetData <- function(userInfo, as.df = FALSE) {
-  getSubsetData(NULL, userInfo, as.df)
+getCurrentSubsetData <- function(userInfo, as.df = FALSE, isolate = TRUE) {
+  getSubsetData(NULL, userInfo, as.df, isolate)
 }
 
 

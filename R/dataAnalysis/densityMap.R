@@ -11,30 +11,7 @@ getSubsetCompareChoices <- function(userInfo, subsetId) {
 }
 
 
-# generate distance models for all subsets
-generateDensityModel <- function(subsetIds, input, userInfo) {
-  
-  loginfo("retrieving models")
-  distanceData <- getDistanceData(subsetIds, userInfo)
-  transects <- getTransects(distanceData)
-  
-  gridSize <- input$densityGridSize
-  if (is.empty(gridSize)) {
-    gridSize <- DEFAULT_GRIDSIZE
-  }
-  grid <- createHexGrid(transects, width = gridSize * 1000, convex = FALSE)
-  # generate distance model for each subset
-  models <- lapply(subsetIds, function(id, data, grid, userInfo) {
-    loginfo("generating model for subset %s", id)
-    d <- data[subset == id]
-    detectionModel <- getDetectionModel(d)
-    densityModel <-
-      getDensityModel(d, grid, detectionModel$estimator)
-    list(detection = detectionModel, density = densityModel)
-  }, distanceData, grid, userInfo)
-  names(models) <- subsetIds
-  models
-}
+
 
 
 densityMap <- function(input, output, session, userInfo) {
@@ -79,11 +56,7 @@ densityMap <- function(input, output, session, userInfo) {
         sub1 <- input$selectCompareSubset1
         sub2 <- input$selectCompareSubset2
       })
-      models <- generateDensityModel(c(sub1, sub2), input, userInfo)
-      model1 <- models[[sub1]]$density
-      model2 <- models[[sub2]]$density
-      newDensities <- compareDensities(model1, model2)
-      list(densities = newDensities, grid = model1$grid, subsets = c(sub1, sub2))
+      compareModels(c(sub1, sub2), input, userInfo)
     }
   }, ignoreInit = TRUE)
   
@@ -104,7 +77,7 @@ densityMap <- function(input, output, session, userInfo) {
           if (compare) {
             model <- compareModel()
             if (is.empty(model)) {
-              return()
+              return(NULL)
             }
             plotDensityMap(
               densities = model$densities,
@@ -118,8 +91,9 @@ densityMap <- function(input, output, session, userInfo) {
             subsetId <- getCurrentSubsetId(userInfo, isolate = FALSE)
             model <- getDistanceModel(subsetId, userInfo)
             if (!is.null(model)) {
-              plotDensityModel(model$density, shpm = LAND_MAP_SHP, lang = userInfo$lang, 
-                               subsetNames = getSubsetLabelsById(subsetId, userInfo))
+              plotDensityModel(model$density, shpm = LAND_MAP_SHP, lang = userInfo$lang)
+            } else {
+              return(NULL)
             }
           }
         }
@@ -145,7 +119,8 @@ densityMap <- function(input, output, session, userInfo) {
                              label = geti18nValue("grid.size", userInfo$lang), 
                              value = gridSize),
              span("km")),
-             i18nTextOutput("warning.grid.size", userInfo$lang, style = "color: blue;")),
+             i18nTextOutput("warning.grid.size", userInfo$lang,
+                            style = "color: blue; font-size: 12px;")),
       column(3, ""),
       column(3, class = "compareSubsetButton",
                    div(

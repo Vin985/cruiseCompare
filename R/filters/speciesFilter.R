@@ -18,9 +18,25 @@ initSpeciesFilter <- function(input, output, session, userInfo) {
 }
 
 
+getSpeciesValue <- function(condition, userInfo, fullName = TRUE) {
+  if (fullName) {
+    lan <- geti18nValue(paste0("species.", userInfo$lang), userInfo$lang)
+    names <- isolate(userInfo$species)
+    names <- unique(names[names$Alpha %in% condition, ])
+    names <- sort(as.character(names[[lan]]))
+  } else {
+    names <- condition
+  }
+  values <- paste0(names, collapse = "; ")
+  return(values)
+}
+
+
 ##############
 ###  Filter
 #############
+
+
 
 
 ## Filter data by region
@@ -46,18 +62,6 @@ speciesFilter <- function(data, condition) {
     # Add selected species
     data <- rbind(nodup, temp)
     
-    # get watchIds where the selected species were observed
-    # m <- match(nodup$WatchID, temp$WatchID)
-    
-    # Add species names and count to the watches
-    # nodup$Count[!is.na(m)] <- temp$Count[m[!is.na(m)]]
-    # nodup$Alpha[!is.na(m)] <- temp$Alpha[m[!is.na(m)]]
-    # nodup$Alpha[!is.na(m)] <- temp$Distance[m[!is.na(m)]]
-    
-    
-    # data$Count[data$Alpha %in% condition[[TYPE_SPECIES]]] <- 0
-    
-    # data <- nodup
   }
   return(data)
 }
@@ -92,6 +96,8 @@ speciesFilterEventHandler <- function(input, output, session, userInfo) {
    updateSpeciesInput(input, session, userInfo)
 }
 
+
+
 ## Get the list of species based on subset and display common names or not 
 getSpeciesChoices <- function(userInfo, useNames) {
   logdebug("Update species choices")
@@ -108,11 +114,9 @@ getSpeciesChoices <- function(userInfo, useNames) {
   
   ## Use common names
   if (!is.null(useNames) && useNames) {
-    lang <-
-      geti18nValue(paste0("species.", userInfo$lang), userInfo$lang)
-    names <- names[order(names[[lang]]), ]
-    labels <- names[[lang]]
-    
+    lan <- geti18nValue(paste0("species.", userInfo$lang), userInfo$lang)
+    names <- names[order(names[[lan]]), ]
+    labels <- names[[lan]]
   } else {
     names <- names[order(names$Alpha), ]
     labels <- names$Alpha
@@ -121,7 +125,7 @@ getSpeciesChoices <- function(userInfo, useNames) {
   choices <- as.list(names$Alpha)
   names(choices) <- labels
   
-  return(list(NOGA = "NOGA"))
+  # return(list(NOGA = "NOGA"))
   return(choices)
 }
 

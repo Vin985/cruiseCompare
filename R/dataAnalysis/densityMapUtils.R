@@ -44,8 +44,8 @@ getBreaks <- function(densities, maxDensity) {
   pos <- temp$Estimates[temp$Estimates > 0]
   neg <- temp$Estimates[temp$Estimates < 0]
   
-  bp <- quantile(pos, c(.25, .5, .75))
-  bn <- quantile(neg, c(.25, .5, .75))
+  bp <- quantile(pos, c(.5, .75, .95))
+  bn <- quantile(neg, c(.5, .75, .95))
   
   # Add and substract 0.1 to min/max because of rounding that can
   # mess with intervals
@@ -176,6 +176,12 @@ plotDensityMap <-
     args <- list(...)
     legendTitle <-
       ifelse(is.null(args$legendTitle), geti18nValue("birds.density.legend", lang), args$legendTitle)
+    legendCex <-
+      ifelse(is.null(args$legendCex), 1, args$legendCex)
+    transectsCex <-
+      ifelse(is.null(args$transectsCex), .2, args$transectsCex)
+    transectsCol <-
+      ifelse(is.null(args$transectsCol), "darkgrey", args$transectsCol)
     subsetNames <- if (is.null(args$subsetNames)) {
       c("subset1", "subset2")
     } else {
@@ -199,6 +205,15 @@ plotDensityMap <-
            border = "black",
            add = T)
     }
+    l <- legend(
+      "bottomright",
+      bty = "n",
+      legend = getBreakTags(breaks),
+      fill = palette,
+      title = legendTitle,
+      cex = legendCex
+    )
+    
     ## Comparison only: transects visited in one subset but not the other
     if (!is.null(sub1) && !is.null(sub2)) {
       plot(sub1,
@@ -209,45 +224,48 @@ plotDensityMap <-
            col = "lightblue3",
            border = "black",
            add = T)
+      # get legend dimensions
+      tl <- legend(plot = FALSE, 
+                   x = "right",
+                   bty = "n",
+                   legend = subsetNames,
+                   title = geti18nValue("visited.cells.legend", lang),
+                   cex = legendCex)
+      
       legend(
-        "right",
+        x = l$rect$left - (tl$rect$w * 1.05 - l$rect$w),
+        y = l$rect$top + tl$rect$h * 1.05,
+        #coords, #"right",
         bty = "n",
         legend = subsetNames,
         fill = c("lightblue1", "lightblue3"),
         title = geti18nValue("visited.cells.legend", lang),
-        cex = 1
+        cex = legendCex
       )
     }
     plot(
       shpm,
       add = T,
       border = "grey55",
-      col = alpha("darkkhaki", 0.65)
+      col = "darkkhaki"#alpha("darkkhaki", 0.65)
     )
     if (!is.null(transects)) {
       plot(
         transects,
-        col = "darkgrey",
+        col = transectsCol,
         pch = 16,
-        cex = .2,
+        cex = transectsCex,
         add = T
       )
       legend(
         "bottomleft",
         bty = "n",
-        cex = 1,
-        legend = c("Locations of 5-min observation periods"),
-        col = "darkgrey",
+        cex = legendCex,
+        legend = geti18nValue("transects.legend", lang),
+        col = transectsCol,
         pch = 16
       )
     }
-    legend(
-      "bottomright",
-      bty = "n",
-      legend = getBreakTags(breaks),
-      fill = palette,
-      title = legendTitle,
-      cex = 1
-    )
+    return(grid2)
     
   }

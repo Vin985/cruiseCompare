@@ -21,6 +21,27 @@ initObserverFilter <- function(input, output, session, userInfo) {
   selectObserverObserver(input, output, session, userInfo)
 }
 
+getCruiseValue <- function(cruiseId, userInfo) {
+  data <- getFullData(as.df = TRUE)
+  dates <- data[data$CruiseID == cruiseId, c("StartDate", "EndDate")][1,]
+  i18nInsert("cruises.value",
+             replace = c(id = cruiseId, 
+                         start = format(dates$StartDate, "%Y-%m-%d"), 
+                         end = format(dates$EndDate, "%Y-%m-%d")), 
+             userInfo$lang)
+}
+
+getCruisesValue <- function(condition, userInfo) {
+  res <- lapply(condition, getCruiseValue, userInfo)
+  paste0(res, collapse = "; ")
+}
+
+getObserverValue <- function(condition, ...) {
+    res <- lapply(condition, function(name) {
+      paste(rev(unlist(strsplit(name,"_"))), collapse = " ")
+    })
+    paste0(res, collapse = "; ")
+}
 
 #####################
 ### Util functions

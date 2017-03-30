@@ -1,7 +1,6 @@
 
 
 cleanDatabase <- function(d) {
-  
   d$Alpha <- as.character(d$Alpha)
   d$Alpha[is.na(d$Alpha) |
              d$Alpha %in% c("RIEN", "NOBI")] <- ""

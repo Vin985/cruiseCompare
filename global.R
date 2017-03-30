@@ -41,11 +41,12 @@ library(leaflet)
 library(leaflet.extras)
 library(logging)
 library(maptools)
+library(FRutils)
 library(ECSASconnect)
 library(R2MCDS)
 library(ecapputils)
 library(DT)
-library(FRutils)
+
 
 ROOT_DIR <- "C:/dev/cruiseCompare"
 
@@ -60,8 +61,9 @@ PAGES_SRC_DIR <- file.path(SRC_DIR, "pages")
 
 ASSETS_DIR <- file.path(ROOT_DIR, "assets")
 MAPS_DIR <- file.path(ASSETS_DIR, "maps")
+REPORTS_DIR <- file.path(ASSETS_DIR, "reports")
 TOOLS_DIR <- file.path(ASSETS_DIR, "tools")
-ANALYSIS_DIR <- file.path(DEST_DIR, "analysis/temp")
+ANALYSIS_DIR <- file.path(DEST_DIR, "analysis")
 
 
 setwd(ROOT_DIR)
@@ -133,11 +135,13 @@ PROJ_LAMBERT <-
 # 
 # save(ecsas, file = file.path(DATA_DIR, "ECSAS/ECSAS_raw.Rdata"))
 # 
-# ecsas2 <- mcds.filter(ecsas, dist2m = FALSE, distanceLabel.field = "DistanceCode")
-# save(ecsas, file = file.path(DATA_DIR, "ECSAS/ECSAS_filtered.Rdata"))
+# ecsas <- mcds.filter(ecsas, dist2m = FALSE, distanceLabel.field = "DistanceCode")
+# ecsas$Date <- strptime(ecsas$Date,"%Y-%m-%d")
+# ecsas$Date <- as.Date(ecsas$Date)
+# save(ecsas, file = file.path(ASSETS_DIR, "ECSAS_filtered.Rdata"))
 
 
-load(file.path(ASSETS_DIR, "ECSAS_filtered.RData"))
+load(file.path(ASSETS_DIR, "ECSAS_filtered.Rdata"))
 ecsas <- cleanDatabase(ecsas)
 spdata <- toSpatialDataframe(ecsas, PROJ_AREA)
 

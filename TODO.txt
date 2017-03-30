@@ -5,12 +5,13 @@ General
 - Changer le nom des subsets apres creation
 - Ajouter un avertissement de ralentissement si le nombre d'observations est trop grand
 - Assurer une navigation fluide (garder en memoire les informations de l'utilisateur) 
+- Afficher le nombre d'observations
 
 Filtres
 --------
 - Date
   - Ajouter une sous-periode
-- Changer la facon dont les donnees sont selectionnees
+  - changer la periode quand une sous selection est faite
 
 
 Visualisation des donnees
@@ -25,9 +26,6 @@ Comparaison de rapports
 
 - Ajouter des regles de comparaison?
 - Creation de rapport
-- Legende: nom subsets dynamique
-- changer couleur des points
-- Ajouter le 0 pour les rapports seuls
 
 
 
@@ -35,4 +33,5 @@ Comparaison de rapports
 Bugs 
 -----
 
-
+- Plantage si la combinaison de filtres aboutit a zero observation
+- changement subset : date pas mise a jour...

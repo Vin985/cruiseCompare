@@ -48,6 +48,20 @@ clearLayerGroup <- function(map, group) {
 }
 
 
+getRegionValue <- function(condition, userInfo) {
+  pols <- drawSelections2sp(condition, PROJ_AREA)
+  bounds <- bbox(pols)
+  bounds <- round(bounds,4)
+  bounds <- as.character(bounds)
+  i18nInsert("region.value",
+             replace = c(long1 = bounds[1],
+                         long2 = bounds[3],
+                         lat1 = bounds[2],
+                         lat2 = bounds[4]), 
+             userInfo$lang)
+}
+
+
 ##############
 ###  Filter
 #############

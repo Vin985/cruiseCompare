@@ -34,6 +34,21 @@ getMonthsNames <- function(lang) {
 }
 
 
+getMonthsValue <- function(condition, userInfo) {
+  res <- lapply(condition, function(month) {
+    geti18nValue(paste0("month.", month), userInfo$lang)
+  })
+  paste0(res, collapse = "; ")
+}
+
+getRangeValue <- function(condition, userInfo) {
+  i18nInsert("range.value",
+             replace = c(start = as.character(condition[1]), 
+                         end = as.character(condition[2])), 
+             userInfo$lang)
+}
+
+
 ##############
 ###  Filter
 #############
@@ -237,7 +252,7 @@ selectDateObserver <-
     observeEvent(input$dateRange, {
       addDateFilter(input$dateRange, type = TYPE_RANGE, userInfo)
     }, ignoreInit = TRUE)
-    
+
     ## Add years filter
     observeEvent(input$dateYears, {
       addDateFilter(input$dateYears, type = TYPE_YEARS, userInfo)

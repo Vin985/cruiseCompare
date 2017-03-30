@@ -1,0 +1,121 @@
+```{r, echo=FALSE,warning=FALSE,message=FALSE,cache=FALSE}
+
+subsetData <- getSubsetData(subset, userInfo)
+analyzedData <- getAnalyzedData(subset, userInfo)
+
+total <- analyzedData$total
+birds <- analyzedData$birds
+birds <- birds[!is.na(English)]
+setkey(birds, Count)
+
+## Format date based on language
+locale <- geti18nValue(paste0("species.", userInfo$lang), userInfo$lang)
+old <- Sys.getlocale("LC_TIME")
+invisible(Sys.setlocale(category = "LC_TIME", locale = locale))
+startDate <- format(min(subsetData$Date), "%d %B")
+endDate <- format(max(subsetData$Date), "%d %B %Y")
+invisible(Sys.setlocale(category = "LC_TIME", locale = old))
+
+notEmpty <- total[Count > 0, sum(.N)]
+
+
+detection <- comparison$models[[subset]]$detection
+detectionModel <- detection$model
+
+density <- comparison$models[[subset]]$density
+
+```
+
+##Sous-ensemble `r i`
+
+###Observations d'oiseaux marins
+
+Nous avons echantillonné `r round(sum(total$WatchLenKm))` km d'océan du `r startDate` au `r endDate`. Durant l'inventaire, un total de `r sum(total$Count, na.rm=T)` oiseaux ont été observés dans `r notEmpty` (`r round(notEmpty/nrow(total)*100)`%) des `r nrow(total)` périodes de 5 minutes d'inventaire. Les observations étaient réparties entre `r nrow(birds)` espèces/genres (Table 1.`r i`) et la taille des groups allait de `r min(birds$Count, na.rm=T)` à `r max(birds$Count, na.rm=T)` oiseaux.  
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE,cache=FALSE }
+
+table1.df <- birds[, .("Espèces" = get(locale), "Groupes" = Flocks, "Oiseaux" = Count, "Taille moyenne des groupes" = meanFlock)]
+table1.df <- table1.df[order(-table1.df$Oiseaux), ]
+
+```
+
+Table 1.`r i`: Nombre de groupes, nombre total d'oiseaux et taille moyenne des groupes par espèce pour le sous-ensemble `r i`
+
+```{r, results='asis' , echo=FALSE, warning=FALSE, message=FALSE, fig.align='center',cache=FALSE }
+kable(table1.df, row.names = FALSE)
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE,cache=FALSE }
+
+maxFlock <- subsetData[which.max(subsetData$Count), ]
+
+topFlocks <- birds[order(-birds$Flocks), ][1:3, ]
+totalFlocks <- sum(birds$Flocks)
+
+flocks <- birds[order(-birds$meanFlock), ][1:3, ]
+flocks$sd <- round(flocks$sd, 2)
+
+topBirds <- birds[order(-birds$Count), ][1:3, ]
+totalBirds <- sum(birds$Count)
+
+```
+
+Les `r topFlocks[[locale]][1]` étaient l'espèce la plus communes, représentant `r round(topFlocks$Flocks[1]/totalFlocks*100,2)`% des groupes observés (Table 1.`r i`), suivi par les `r topFlocks[[locale]][2]` (`r round(topFlocks$Flocks[2]/totalFlocks*100,2)`%), et les `r topFlocks[[locale]][3]` (`r round(topFlocks$Flocks[3]/totalFlocks*100,2)`%).
+
+Le plus gros groupe observé etait constitué de `r maxFlock[[locale]]`, comptant `r maxFlock$Count` individus. Au total, les `r flocks[[locale]][1]` avaient la taille de groupe moyenne la plus élevée ($\bar{x}$ = `r flocks$meanFlock[1]`; sd=`r flocks$sd[1]`; Table 1.`r i`), suivi par les `r flocks[[locale]][2]`($\bar{x}$ = `r flocks$meanFlock[2]`; sd=`r flocks$sd[2]`), et les `r flocks[[locale]][3]`($\bar{x}$ = `r flocks$meanFlock[3]`; sd=`r flocks$sd[3]`).
+
+Les `r topBirds[[locale]][1]` étaient l'espèce la plus abondante (Table 1.`r i`), avec `r round(topBirds$Count[1]/totalBirds*100,2)`% des oiseaux observés (Table 1.`r i`), suivi par les `r topBirds[[locale]][2]` (`r round(topBirds$Count[2]/totalBirds*100,2)`%) et les `r topBirds[[locale]][3]` (`r round(topBirds$Count[3]/totalBirds*100,2)`%).  
+
+###Détection des oiseaux marins
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE,cache=FALSE, include=FALSE}
+
+model.names <- c("uniforme","uniforme","semi-normal","semi-normal","de taux au hasard","de taux au hasard")
+adj.names <- c("cosinus","polynomial","cosinus","polynomial hermite", "cosinus", "polynomial")
+
+pred.df <- data.frame(x = detectionModel$detection[['Global']][,'distance'],
+                      y = detectionModel$detection[['Global']][,'predicted'])
+
+table3.df <- detectionModel$parameter_estimates$Global[,-1]
+table3.df[, -1] <- round(table3.df[, -1], 2)
+p.line <- which(table3.df$Parameters == "p")
+
+###extract prediction
+table4.df <- detectionModel$density_estimate$Global
+table4.df[, -c(1, 2)] <- round(table4.df[, -c(1, 2)], 2)
+d.line <- which(table4.df$Parameters == "D")
+N.line <- which(table4.df$Parameters == "N")
+
+fig3 <- predicted_hist(detectionModel)
+
+detectionPath <- file.path(REPORT_FIGS_OUTPUT_DIR, 
+              paste0("detection_", subset, ".png"))
+png(detectionPath,
+    width = 480, height = 480, units = "px")
+print(fig3)
+invisible(dev.off())
+
+```
+![Figure 1.`r i`: Fonction de détection pour toutes les espèces combinées en fonction des classes de distance (ligne) avec les observations par classe de distance pour le sous-ensemble `r i`](`r detectionPath` "Graphique de détection pour le sous-ensemble `r i`")
+
+Le modèle d'échantillonnage par distance décrivant le mieux comment les observations d'oiseaux marins varient en fonction de la distance par rapport au bateau etait un modèle `r model.names[detection$idx]` avec un ajustement `r adj.names[detection$idx]`. La probabilité de détection estimée était de `r table3.df[p.line, 2]` (95%CI:`r paste(table3.df[p.line, 5],table3.df[p.line,6], sep=" - ")`; Figure 1.`r i`) dans les 300 mètres de large du transect. Le modèle prédisait une densité de `r table4.df[d.line,3]` (95%CI:`r paste(table4.df[d.line, 6],table4.df[d.line, 7], sep=" - ")`) oiseaux marins/$km^2$ le long du trajet du bateau. Il est important de noter que ce modèle ne tient pas compte des différences potentielles de détection entre les espèces ou des effets des conditions quotidiennes.    
+
+
+###Distribution des oiseaux marins
+```{r, echo=FALSE, warning=FALSE, message=FALSE,cache=FALSE, include=FALSE}
+
+densityPath <- file.path(REPORT_FIGS_OUTPUT_DIR, 
+              paste0("density_", subset, ".png"))
+ ##plot map
+png(densityPath, width = 960, height = 960, antialias = "cleartype", units = "px")
+  new.grid2 <- plotDensityModel(density, shpm = LAND_MAP_SHP, lang = userInfo$lang,
+                                legendCex = 1.7, transectsCex = .4, transectsCol = "darkred")
+invisible(dev.off())
+ 
+```
+ ![Figure 2.`r i`: Densité d'oiseaux marins dans des cellules de `r gridSize`x`r gridSize` km où les observations ont eu lieu, selon le modèle de détection choisi](`r densityPath` "Graphique de distribution pour le sous-ensemble `r i`")
+ 
+À la suite de la post-stratification spatiale du modèle de distance choisi, il y avait `r nrow(new.grid2[new.grid2$classno==2,])` cellules de grille avec des densités sous le quantile 50%, `r nrow(new.grid2[new.grid2$classno==3,])` cellule(s) entre ce dernier et le quantile 75%, `r nrow(new.grid2[new.grid2$classno==4,])` cellule(s) entre ce dernier et le quantile 95%, et `r nrow(new.grid2[new.grid2$classno==5,])` cellule(s) dans les derniers 5% (Fig. 2.`r i`). En considérat que les cellules visités représentaient la zone d'étude, nous avons estimé la population totale d'oiseaux marins à `r sum(new.grid2@data$abun)` durant la période étudiée.
+
+

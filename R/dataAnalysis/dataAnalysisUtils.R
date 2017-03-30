@@ -75,7 +75,8 @@ analyzeData <- function(data) {
     Flocks = .N,
     Count = sum(Count, na.rm = T),
     mean = mean(Count, na.rm = T),
-    sd = sd(Count, na.rm = T)
+    sd = sd(Count, na.rm = T),
+    French = unique(French)
   ), by = English]
   birds[, cv := sd / mean]
   birds[, meanFlock := round(Count / Flocks, 1)]
@@ -102,7 +103,7 @@ getDetectionModel <- function(dt) {
   dt <- droplevels(dt)
   dt[, STR_AREA := sum(total$WatchLenKm) * 0.3]
   
-  all.dist <- distance.wrap(
+  all.dist <- mcds.wrap(
     dt,
     SMP_EFFORT = "WatchLenKm",
     DISTANCE = "Distance",
@@ -309,3 +310,36 @@ compareDensities <- function(model1, model2) {
 }
 
 
+# generate distance models for all subsets
+generateDensityModel <- function(subsetIds, input, userInfo) {
+  
+  loginfo("retrieving models")
+  distanceData <- getDistanceData(subsetIds, userInfo)
+  transects <- getTransects(distanceData)
+  
+  gridSize <- input$densityGridSize
+  if (is.empty(gridSize)) {
+    gridSize <- DEFAULT_GRIDSIZE
+  }
+  grid <- createHexGrid(transects, width = gridSize * 1000, convex = FALSE)
+  # generate distance model for each subset
+  models <- lapply(subsetIds, function(id, data, grid, userInfo) {
+    loginfo("generating model for subset %s", id)
+    d <- data[subset == id]
+    detectionModel <- getDetectionModel(d)
+    densityModel <-
+      getDensityModel(d, grid, detectionModel$estimator)
+    list(detection = detectionModel, density = densityModel)
+  }, distanceData, grid, userInfo)
+  names(models) <- subsetIds
+  models
+}
+
+
+compareModels <- function(subsetIds, input, userInfo) {
+  models <- generateDensityModel(subsetIds, input, userInfo)
+  model1 <- models[[subsetIds[1]]]$density
+  model2 <- models[[subsetIds[2]]]$density
+  newDensities <- compareDensities(model1, model2)
+  list(densities = newDensities, grid = model1$grid, subsets = subsetIds, models = models)
+}

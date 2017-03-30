@@ -122,29 +122,52 @@ getCurrentCondition <- function(userInfo, type) {
 
 ## Get the values of the filters and convert them in a single
 ## string if they are of atomic type
-getConditionValues <- function(condition) {
+getConditionValues <- function(type, condition, ...) {
   ## Create a single string with values
-  if (is.atomic(condition)) {
-    return(paste0(condition, collapse = "; "))
+  cond <- condition[[type]]
+  funcName <- paste0("get", capitalizeFirst(type), "Value") 
+  if (exists(funcName)) {
+    FUN <- get(funcName)
+    return(FUN(cond, ...))
+  } else if (is.atomic(condition)) {
+    return(paste0(cond, collapse = "; "))
   } else {
     ## For non atomic types (e.g: region selection)
     return("")
   }
 }
 
+
 ## Get data from filter conditions
-getFilterData <- function(filter) {
+getFilterData <- function(filter, ...) {
   condition <- getCondition(filter)
-  values <- lapply(condition, getConditionValues)
+  values <- lapply(names(condition), getConditionValues, condition, ...)
   names(values) <- names(condition)
   return(values)
 }
 
+# getFilterValue <- function(filter, ...) {
+#   values <- lapply(names(condition), function(type, condition,...) {
+#   
+#     if (type == TYPE_CRUISE) {
+#       res <- lapply(cond, getCruiseValue, userInfo)
+#       paste0(res, collapse = "; ")
+#     } else {
+#       paste0(cond, collapse = "; ")
+#     }
+#   }, condition)
+#   names(values) <- names(condition)
+#   return(values)
+#   
+#   FUN <- searchFunction()
+#   FUN(getCondition(filter), ...)
+# }
+
 ## Get filter values for display
-getFilterValues <- function(subset, userInfo) {
+getFilterValues <- function(subset, userInfo, ...) {
   filters <- getFiltersBySubset(subset, userInfo)
   filters <- filters[sort(names(filters))]
-  values <- lapply(filters, getFilterData)
+  values <- lapply(filters, getFilterData, userInfo, ...)
   names(values) <- names(filters)
   unlist(values)
 }
