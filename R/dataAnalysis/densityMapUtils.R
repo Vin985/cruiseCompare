@@ -166,6 +166,9 @@ plotDensityMap <-
     if (!is.null(grid$Estimates.x)) {
       sub1 <- unvisited[!is.na(unvisited$Estimates.x),]
       sub2 <- unvisited[!is.na(unvisited$Estimates.y),]
+    } else {
+      # don't display unvisited cells if no comparison 
+      grid <- grid[!is.na(grid$Estimates), ]
     }
     
     # Cells never visites
@@ -181,7 +184,7 @@ plotDensityMap <-
     transectsCex <-
       ifelse(is.null(args$transectsCex), .2, args$transectsCex)
     transectsCol <-
-      ifelse(is.null(args$transectsCol), "darkgrey", args$transectsCol)
+      ifelse(is.null(args$transectsCol), "darkred", args$transectsCol)
     subsetNames <- if (is.null(args$subsetNames)) {
       c("subset1", "subset2")
     } else {
@@ -193,7 +196,6 @@ plotDensityMap <-
     plot(
       grid,
       bg = hcl(240, 50, 66),
-      axes = T,
       cex.axis = 1.5,
       xlim = bounds[1,] * 1.5
     )
@@ -266,6 +268,77 @@ plotDensityMap <-
         pch = 16
       )
     }
+    
+    
+    
+    # boxcut <- par("usr")
+    # xxlat <- boxcut[1]
+    # m <- expand.grid(xxlat, seq(boxcut[3], boxcut[4], length.out = 100))
+    # p <- SpatialPoints(m, proj4string = CRS(proj4string(grid)))
+    # p2 <- spTransform(p, CRS(DENSITY_MAP_PROJ))
+    # r <- range(coordinates(p2)[, 2])
+    # selat <- pretty(r)
+    # if (selat[1] < r[1])
+    #   selat <- selat[-1]
+    # if (selat[length(selat)] > r[2])
+    #   selat <- selat[-length(selat)]
+    # yylat <- sapply(selat, function(k) {
+    #   coordinates(p)[which.min(abs(coordinates(p2)[, 2] - k)), 2]
+    # })
+    # 
+    # 
+    # 
+    # yylon <- boxcut[3] + 100000#par("usr")[3]
+    # m <- expand.grid(seq(boxcut[1], boxcut[2], by = 100), yylon)
+    # p <- SpatialPoints(m, proj4string = CRS(proj4string(grid)))
+    # p2 <- spTransform(p, CRS(DENSITY_MAP_PROJ))
+    # r <- range(coordinates(p2)[, 1])
+    # selon <- pretty(r)
+    # xxlon <- sapply(selon, function(k) {
+    #   coordinates(p)[which.min(abs(coordinates(p2)[, 1] - k)), 1]
+    # })
+    
+    xt <- getAxisTicks("x", proj4string(grid))
+    yt <- getAxisTicks("y", proj4string(grid))
+      
+    xticks <- parse(text = paste0(abs(xt), "*degree ~ W"))
+    yticks <- parse(text = paste0(yt, "*degree ~ N"))
+    
+    axis(1, at = as.numeric(names(xt)), labels = xticks, cex.axis = 1.5)
+    axis(2, at = as.numeric(names(yt)), labels = yticks, cex.axis = 1.5)
+    
     return(grid2)
     
   }
+
+getAxisTicks <- function(type, gridProj) {
+  boxcut <- par("usr")
+  i <- if (type == "x") {
+    1
+  } else {
+    3
+  }
+  m <- expand.grid(1, seq(boxcut[i], boxcut[i + 1], length.out = 100))
+  p <- SpatialPoints(m, proj4string = CRS(gridProj))
+  p2 <- spTransform(p, CRS(DENSITY_MAP_PROJ))
+  r <- range(coordinates(p2)[, 2])
+  ticks <- pretty(r, n = 7)
+  
+  old <- sapply(ticks, function(k) {
+    coordinates(p)[which.min(abs(coordinates(p2)[, 2] - k)), 2]
+  })
+  
+  # if ticks are outside range, then draw it outside the plot
+  # this is to ensure axes are drawn all along the plot and not only
+  # between ticks
+  if (ticks[1] < r[1])
+    old[1] <- boxcut[i] - 100
+  if (ticks[length(ticks)] > r[2])
+    old[length(ticks)] <- boxcut[i + 1] + 100
+  
+  names(ticks) <- old
+  
+  
+  
+  return(ticks)
+}

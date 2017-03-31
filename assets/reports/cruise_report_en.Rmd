@@ -1,0 +1,88 @@
+---
+output: 
+  word_document:
+    fig_caption: yes
+params:
+  lang: en
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r global options, include=FALSE}
+#set root directory
+#opts_knit$set(root.dir="//Client/U$/TEMP")
+```
+
+```{r,root, echo=FALSE,warning=FALSE,message=FALSE,cache=FALSE}
+library(ECSASconnect)
+library(R2MCDS)
+require(MASS)
+require(knitr)
+require(rgdal)
+library(png)
+library(grid)
+require(maptools)
+library(RColorBrewer) 
+library(dplyr)
+library(rgeos)
+
+models <- reportData$models
+subsets <- reportData$subsets
+
+# Current date
+today <- Sys.Date()
+
+```
+
+## Report on Seabirds at-sea data
+
+-------------------------
+
+```{r, subsetInfos, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE, results="asis"}
+cpt <- 1
+for (i in subsets) {
+  cat("**", geti18nValue("report.selected.filters", userInfo$lang), " ", cpt, " :**\n\n", sep = "")
+  values <- getFilterValues(i, userInfo)
+  l <- lapply(names(values), function(id) {
+            value <- values[id]
+            res <- paste0("**", geti18nValue(paste0("filter.", id), userInfo$lang), ":** ")
+            res <- paste0(res, paste0(value, collapse = "; "))
+          })
+  cat(paste(l, collapse = "  \n"))
+  cat("\n\n")
+  cat("\\\n")
+  cpt <- cpt + 1
+}
+
+```
+
+**Prepared by:** `r author`
+
+Environment Canada, Canadian Wildlife Service
+
+`r today`
+
+-------------------------
+
+
+##Results
+
+
+```{r testchild, echo=FALSE, include=FALSE}
+  out = NULL
+  for (i in seq_along(subsets)) {
+    subset <- subsets[i]
+    detection <- models[[subset]]$detection
+    density <- models[[subset]]$density
+    out <- c(out, knit_child(sprintf('cruise_info_%s.Rmd', params$lang)))
+  }
+```
+
+```{r, echo=FALSE, results="asis"}
+  cat(paste(out, collapse = '\n'))
+```
+
+

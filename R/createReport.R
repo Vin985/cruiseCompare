@@ -40,22 +40,20 @@ generateReport <-
     }
     today <- Sys.Date() #needed in markdown
     
-    subsetData <- getSubsetData(subsetId, userInfo, as.df = TRUE)
-    if (is.null(subsetData)) {
-      subset <- getSubset(subsetId, userInfo)
-      subsetData <- filterData(subset, userInfo)
-      if (!is.null(subsetData)) {
-        subsetData <- subsetData@data
-      }
-    }
     
-    Observation.df <- droplevels(subsetData)
+    models <- generateDensityModel(subsetId, input, userInfo)
     
     # If there is more than one to generate, suffix the subset id
     addSubsetId <-
       ifelse(length(input$subsetReport) > 1, paste0("_", subsetId), "")
-    # Use the user provided name or the default one if it doesn't exists
     
+    # Gridsize for use in report
+    gridSize <- isolate(input$gridSize)
+    if (is.null(gridSize)) {
+      gridSize <- DEFAULT_GRIDSIZE
+    }
+    
+    # Use the user provided name or the default one if it doesn't exists
     outputFile <- if (is.null(fileDest)) {
       fileName <- ifelse(is.empty(input$reportFileName),
                          DEFAULT_FILE_NAME,
@@ -65,6 +63,10 @@ generateReport <-
       basename(fileDest)
     }
     
+    
+    # Data for use in report
+    reportData <- list(models = models, gridSize = gridSize, subsets = subsetId)
+    
     outputDir <-
       ifelse(is.null(fileDest), REPORT_OUTPUT_DIR, dirname(fileDest))
     
@@ -72,10 +74,13 @@ generateReport <-
     
     
     rmarkdown::render(
-      file.path(ASSETS_DIR, "Shiny_cruise_report2.Rmd"),
+      file.path(REPORTS_DIR, sprintf("cruise_report_%s.Rmd", userInfo$lang)),
       output_file = outputFile,
-      output_dir = outputDir
+      output_dir = outputDir,
+      params = list(lang = userInfo$lang),
+      encoding = "UTF-8"
     )
+    
     
   }
 
@@ -98,10 +103,6 @@ generateCompareReport <- function(input, userInfo, fileDest = NULL) {
   
   compareModel <- compareModels(c(sub1, sub2), input, userInfo)
   
-  subsetData <- getDistanceData(c(sub1, sub2), userInfo)
-  subsetData <- droplevels(subsetData)
-  
-  
   # Gridsize for use in report
   gridSize <- isolate(input$gridSize)
   if (is.null(gridSize)) {
@@ -109,8 +110,7 @@ generateCompareReport <- function(input, userInfo, fileDest = NULL) {
   }
   
   # Data for use in report
-  compareData <- list(rawData = subsetData, comparison = compareModel,
-                      gridSize = gridSize)
+  reportData <- list(comparison = compareModel, gridSize = gridSize)
   
   
   # Use the user provided name or the default one if it doesn't exists
@@ -134,7 +134,6 @@ generateCompareReport <- function(input, userInfo, fileDest = NULL) {
     output_file = outputFile,
     output_dir = outputDir,
     params = list(lang = userInfo$lang),
-    clean = FALSE,
     encoding = "UTF-8"
   )
   
@@ -235,7 +234,14 @@ createReportRender <- function(input, output, session, userInfo) {
         "reportFileName",
         geti18nValue("report.file.name", userInfo$lang),
         placeholder = geti18nValue("report.file.name.placeholder", userInfo$lang)
-      )
+      ),
+      fluidRow(column(10, div(class = "gridSize", style = "margin-bottom:20px;",
+                              numericInput("densityGridSize", 
+                                           label = geti18nValue("grid.size", userInfo$lang), 
+                                           value = DEFAULT_GRIDSIZE),
+                              span("km")),
+                      i18nTextOutput("warning.grid.size", userInfo$lang,
+                                     style = "color: blue; font-size: 12px;")))
     )
   })
   
@@ -351,13 +357,6 @@ createReportRender <- function(input, output, session, userInfo) {
         selectSubsetCompare(2, subsetChoices,
                             input, output, userInfo, "Report")
       ),
-      fluidRow(column(10, div(class = "gridSize", style = "margin-top:20px;",
-                             numericInput("densityGridSize", 
-                                          label = geti18nValue("grid.size", userInfo$lang), 
-                                          value = DEFAULT_GRIDSIZE),
-                             span("km")),
-                      i18nTextOutput("warning.grid.size", userInfo$lang,
-                                     style = "color: blue; font-size: 12px;"))),
       fluidRow(
         column(5, offset = 7, downloadButton("downloadCompareReport",
                                               geti18nValue("download.compare.report", userInfo$lang),

@@ -29,10 +29,11 @@ library(RColorBrewer)
 library(dplyr)
 library(rgeos)
 
-comparison <- compareData$comparison
+comparison <- reportData$comparison
 
 # get subset Ids
 subsets <- comparison$subsets
+models <- comparison$models
 
 # Current date
 today <- Sys.Date()
@@ -79,6 +80,9 @@ Environment Canada, Canadian Wildlife Service
   out = NULL
   for (i in seq_along(subsets)) {
     subset <- subsets[i]
+    detection <- models[[subset]]$detection
+    density <- models[[subset]]$density
+    out <- c(out, paste0("##Sous-ensemble ", i,"\n\n"))
     out <- c(out, knit_child(sprintf('cruise_info_%s.Rmd', params$lang)))
   }
 ```
@@ -87,6 +91,8 @@ Environment Canada, Canadian Wildlife Service
   cat(paste(out, collapse = '\n'))
 ```
 
+
+##Comparaison des sous-ensembles
 
 
 ```{r Map,echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE, include=FALSE}

@@ -18,15 +18,9 @@ invisible(Sys.setlocale(category = "LC_TIME", locale = old))
 
 notEmpty <- total[Count > 0, sum(.N)]
 
-
-detection <- comparison$models[[subset]]$detection
 detectionModel <- detection$model
 
-density <- comparison$models[[subset]]$density
-
 ```
-
-##Subset `r i`
 
 ###Seabird Sightings
 
