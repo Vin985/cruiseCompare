@@ -89,7 +89,6 @@ source(file.path(DATA_ANALYSIS_SRC_DIR, "densityMapUtils.R"))
 source(file.path(SRC_DIR, "subsetTabs.R"))
 source(file.path(SRC_DIR, "createReport.R"))
 source(file.path(SRC_DIR, "filters.R"))
-source(file.path(SRC_DIR, "testmd.R"))
 
 
 ## Pages
