@@ -208,7 +208,7 @@ getDensityModel <-
     
     # Construct sample labels considering that day transects can overlap with multiple squares
     temp <-
-      aggregate(WatchLenKm ~ SMP_LABEL, data = unique(data[, c("SMP_LABEL", "WatchID", "WatchLenKm")]), sum)
+      aggregate(WatchLenKm ~ SMP_LABEL, data = unique(data[, c("SMP_LABEL", "WatchID", "WatchLenKm"), with = FALSE]), sum)
     names(temp)[2] <- "SMP_EFFORT"
     d <- merge(data, temp, by = "SMP_LABEL", sort = FALSE)
     
@@ -222,7 +222,7 @@ getDensityModel <-
         "Distance",
         "Count",
         "Alpha"
-      )]
+      ), with = FALSE]
     
     # Aggregate observations by label
     dd <- d[, .(V1 = sum(Count, na.rm = TRUE)), by = SMP_LABEL]
