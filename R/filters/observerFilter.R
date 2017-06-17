@@ -1,5 +1,7 @@
 
 
+
+
 ## Name of the filter
 OBSERVER_FILTER <- "observer"
 
@@ -23,12 +25,17 @@ initObserverFilter <- function(input, output, session, userInfo) {
 
 getCruiseValue <- function(cruiseId, userInfo) {
   data <- getFullData(as.df = TRUE)
-  dates <- data[data$CruiseID == cruiseId, c("StartDate", "EndDate")][1,]
-  i18nInsert("cruises.value",
-             replace = c(id = cruiseId, 
-                         start = format(dates$StartDate, "%Y-%m-%d"), 
-                         end = format(dates$EndDate, "%Y-%m-%d")), 
-             userInfo$lang)
+  dates <-
+    data[data$CruiseID == cruiseId, c("StartDate", "EndDate")][1,]
+  i18nInsert(
+    "cruises.value",
+    replace = c(
+      id = cruiseId,
+      start = format(dates$StartDate, "%Y-%m-%d"),
+      end = format(dates$EndDate, "%Y-%m-%d")
+    ),
+    userInfo$lang
+  )
 }
 
 getCruisesValue <- function(condition, userInfo) {
@@ -37,10 +44,10 @@ getCruisesValue <- function(condition, userInfo) {
 }
 
 getObserverValue <- function(condition, ...) {
-    res <- lapply(condition, function(name) {
-      paste(rev(unlist(strsplit(name,"_"))), collapse = " ")
-    })
-    paste0(res, collapse = "; ")
+  res <- lapply(condition, function(name) {
+    paste(rev(unlist(strsplit(name, "_"))), collapse = " ")
+  })
+  paste0(res, collapse = "; ")
 }
 
 #####################
@@ -97,33 +104,32 @@ observerFilter <- function(data, condition) {
   loginfo("filtering with observer %s and cruises %s",
           condition[[TYPE_OBSERVER]],
           condition[[TYPE_CRUISE]])
-  
+
   ## Filter by observer
   observer <- condition[[TYPE_OBSERVER]]
   if (!is.empty(observer)) {
     data <- data[which(data$ObserverName == observer),]
   }
-  
+
   ## Filter by cruises
   cruises <- condition[[TYPE_CRUISE]]
   if (!is.empty(cruises)) {
     data <- data[data$CruiseID %in% cruises,]
   }
-  
+
   return(data)
 }
 
 
 ## Add the observer filter to the subset
 addObserverFilter <- function(selections, type, userInfo) {
-  
   filter <- getCurrentFilter(userInfo, OBSERVER_FILTER)
   condition <- getCondition(filter)
-  
+
   condition[[type]] <- selections
-  
+
   loginfo("add %s filter with value %s", type, selections)
-  
+
   filter <- setCondition(condition, filter)
   addFilterToSubset(userInfo, filter)
 }
@@ -133,18 +139,19 @@ addObserverFilter <- function(selections, type, userInfo) {
 ### Observers
 ###############
 
-observerFilterEventHandler <- function(input, output, session, userInfo) {
-  event <- isolate(userInfo$event)
-  updateChoices <- TRUE
-  if (event$type == CHANGE_LANG_EVENT) {
-    loginfo("changing language")
-    updateChoices <- FALSE
-  } else if (event$type == SUBSET_DATA_EVENT) {
-    loginfo("subsetting Data")
-    setObserverList(userInfo)
-  } 
-  updateObserverInput(session, userInfo, updateChoices = updateChoices)
-}
+observerFilterEventHandler <-
+  function(input, output, session, userInfo) {
+    event <- isolate(userInfo$event)
+    updateChoices <- TRUE
+    if (event$type == CHANGE_LANG_EVENT) {
+      loginfo("changing language")
+      updateChoices <- FALSE
+    } else if (event$type == SUBSET_DATA_EVENT) {
+      loginfo("subsetting Data")
+      setObserverList(userInfo)
+    }
+    updateObserverInput(session, userInfo, updateChoices = updateChoices)
+  }
 
 ## Update the cruises list
 updateCruisesInput <-
@@ -152,11 +159,11 @@ updateCruisesInput <-
            session,
            userInfo) {
     logdebug("cruise update")
-    
+
     cruiseChoices <- NULL
     ## Update selection
     cruiseSelection <- getSelectedCruises(userInfo)
-    
+
     cruiseData <- getObserverList(userInfo)
     if (!is.empty(observer)) {
       cruiseChoices <-
@@ -165,7 +172,7 @@ updateCruisesInput <-
       # If observer is empty, laod all cruises
       cruiseChoices <- cruiseData$CruiseID
     }
-    
+
     ## Update cruise input
     logdebug("selectedCruises : %s ",
              cruiseSelection)
@@ -180,11 +187,11 @@ updateCruisesInput <-
         placeholder = geti18nValue("select.all", userInfo$lang)
       )
     )
-    
+
   }
 
 
-## Update the observers list 
+## Update the observers list
 updateObserverInput <-
   function(session,
            userInfo,
@@ -194,12 +201,12 @@ updateObserverInput <-
     ## Update choice list?
     data <- getObserverList(userInfo)
     observerChoices <- c("", unique(data$ObserverName))
-    
+
     ## Update selection ?
     observerSelection <- getSelectedObserver(userInfo)
-    
+
     logdebug("selectedObserver : %s",
-            observerSelection)
+             observerSelection)
     ## Update the observer input
     updateSelectizeInput(
       session,
@@ -209,7 +216,7 @@ updateObserverInput <-
       label = geti18nValue("select.observers", userInfo$lang),
       options = list(placeholder = geti18nValue("select.all", userInfo$lang))
     )
-    
+
     updateCruisesInput(observerSelection, session, userInfo)
   }
 
@@ -218,24 +225,30 @@ updateObserverInput <-
 selectObserverObserver <-
   function(input, output, session, userInfo) {
     ## Observer selection has changed
-    observeEvent(input$observer, {
-      logdebug("observer changed: %s", input$observer)
-      # Only update input and filter if observer isn't in it
-      if (!isSelectedObserver(input$observer, userInfo)) {
-        # Add observer filter
-        addObserverFilter(input$observer, TYPE_OBSERVER, userInfo)
-        # Update list of cruises
-        updateCruisesInput(input$observer, session, userInfo)
-      }
-    }, ignoreNULL = FALSE, ignoreInit = TRUE)
-    
-    
+    observeEvent(input$observer,
+                 {
+                   logdebug("observer changed: %s", input$observer)
+                   # Only update input and filter if observer isn't in it
+                   if (!isSelectedObserver(input$observer, userInfo)) {
+                     # Add observer filter
+                     addObserverFilter(input$observer, TYPE_OBSERVER, userInfo)
+                     # Update list of cruises
+                     updateCruisesInput(input$observer, session, userInfo)
+                   }
+                 },
+                 ignoreNULL = FALSE,
+                 ignoreInit = TRUE)
+
+
     ## Cruise selection has changed
-    observeEvent(input$cruises, {
-      # add cruise filter
-      addObserverFilter(input$cruises, TYPE_CRUISE, userInfo)
-    }, ignoreNULL = FALSE, ignoreInit = TRUE)
-    
+    observeEvent(input$cruises,
+                 {
+                   # add cruise filter
+                   addObserverFilter(input$cruises, TYPE_CRUISE, userInfo)
+                 },
+                 ignoreNULL = FALSE,
+                 ignoreInit = TRUE)
+
   }
 
 
@@ -247,12 +260,12 @@ selectObserverObserver <-
 ## Main render function for observer selection. All UI render function are here
 selectObserverRender <- function(input, output, session, userInfo) {
   cruiseData <- isolate(setObserverList(userInfo))
-  
+
   ## Observer title
   output$observerTitle <- renderUI({
-    h4(geti18nValue("title.observer", userInfo$lang))
+    filterHeader(OBSERVER_FILTER, userInfo)
   })
-  
+
   ## Select observerss
   output$selectObserver <- renderUI({
     isolate({
@@ -271,7 +284,7 @@ selectObserverRender <- function(input, output, session, userInfo) {
           ))
     })
   })
-  
+
   # Select cruises
   output$selectCruises <- renderUI({
     isolate({

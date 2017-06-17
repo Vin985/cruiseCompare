@@ -12,18 +12,18 @@ rm(list = ls())
 #           "package:methods",
 #           "package:base"
 #       )
-#   
+#
 #   package.list <-
 #       search()[ifelse(unlist(gregexpr("package:", search())) == 1, TRUE, FALSE)]
-#   
+#
 #   package.list <- setdiff(package.list, basic.packages)
-#   
+#
 #   if (length(package.list) > 0)
 #     for (package in package.list)
 #       detach(package, character.only = TRUE)
-#   
+#
 # }
-# 
+#
 # detachAllPackages()
 
 library(shiny)
@@ -36,7 +36,7 @@ library(knitr)
 library(rgdal)
 library(png)
 library(grid)
-library(RColorBrewer) 
+library(RColorBrewer)
 library(leaflet)
 library(leaflet.extras)
 library(logging)
@@ -48,7 +48,7 @@ library(ecapputils)
 library(DT)
 
 
-ROOT_DIR <- "C:/dev/cruiseCompare"
+ROOT_DIR <- "C:/dev/EC/cruiseCompare"
 
 SRC_DIR <- file.path(ROOT_DIR, "R")
 DEST_DIR <- file.path(ROOT_DIR, "dest")
@@ -73,6 +73,7 @@ source(file.path(SRC_DIR, "utils.R"))
 source(file.path(SRC_DIR, "filterUtils.R"))
 source(file.path(SRC_DIR, "subsetUtils.R"))
 source(file.path(SRC_DIR, "distanceUtils.R"))
+source(file.path(SRC_DIR, "renderUtils.R"))
 
 
 ## Filters
@@ -92,6 +93,7 @@ source(file.path(SRC_DIR, "filters.R"))
 
 
 ## Pages
+source(file.path(PAGES_SRC_DIR, "importDataPage.R"))
 source(file.path(PAGES_SRC_DIR, "selectionPage.R"))
 source(file.path(PAGES_SRC_DIR, "viewDataPage.R"))
 
@@ -124,16 +126,16 @@ PROJ_LAMBERT <-
 ### Extract ECSAS Data
 # ECSAS_DATA_PATH <- file.path(DATA_DIR, "ECSAS")
 # ECSAS_DB_FILE <- "ECSAS.mdb"
-# 
+#
 # ALPHA_LIST_FILE <- file.path(DATA_DIR, "alpha_code.csv")
 # alpha.ecsas <- read.table(ALPHA_LIST_FILE, header = T, sep = ",")
 # ecsas <- ECSAS.extract(
 #   ecsas.drive = DATA_DIR,
 #   ecsas.file = ECSAS_DB_FILE
 # )
-# 
+#
 # save(ecsas, file = file.path(DATA_DIR, "ECSAS/ECSAS_raw.Rdata"))
-# 
+#
 # ecsas <- mcds.filter(ecsas, dist2m = FALSE, distanceLabel.field = "DistanceCode")
 # ecsas$Date <- strptime(ecsas$Date,"%Y-%m-%d")
 # ecsas$Date <- as.Date(ecsas$Date)
@@ -148,7 +150,7 @@ spdata <- toSpatialDataframe(ecsas, PROJ_AREA)
 LAND_MAP_LAYER <- "ne_10m_land"
 ALL_MAP_SHP <- readOGR(MAPS_DIR, LAND_MAP_LAYER)
 databox <- bbox(spdata)
-databox <- databox + c(0, -20, 20, 10) 
+databox <- databox + c(0, -20, 20, 10)
 LAND_MAP_SHP <- gIntersection(bbox2pol(databox, proj4string = PROJ_AREA), ALL_MAP_SHP, byid = T)
 
 # Default grid size for distance anlaysis in km
@@ -157,7 +159,7 @@ DEFAULT_GRIDSIZE <- 100
 ## Get the full dataset from reactive values
 getFullData <- function(as.df = FALSE) {
   if (as.df) {
-    spdata@data 
+    spdata@data
   } else {
     spdata
   }

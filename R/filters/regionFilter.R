@@ -38,7 +38,7 @@ extraDependencies <- function(map) {
                           )
                         ))
   map
-  
+
 }
 
 
@@ -57,7 +57,7 @@ getRegionValue <- function(condition, userInfo) {
              replace = c(long1 = bounds[1],
                          long2 = bounds[3],
                          lat1 = bounds[2],
-                         lat2 = bounds[4]), 
+                         lat2 = bounds[4]),
              userInfo$lang)
 }
 
@@ -82,10 +82,10 @@ regionFilter <- function(data, condition) {
 addRegionFilter <- function(selections, userInfo) {
   filter <- getCurrentFilter(userInfo, REGION_FILTER)
   condition <- getCondition(filter)
-  
+
   logdebug("add region filter")
   condition[[TYPE_REGION]] <- selections
-  
+
   filter <- setCondition(condition, filter)
   addFilterToSubset(userInfo, filter)
 }
@@ -107,7 +107,7 @@ regionFilterEventHandler <-
       #&& userInfo$page != SELECTION_PAGE)) {
       return()
     }
-    
+
     updateMap(userInfo)
   }
 
@@ -171,13 +171,13 @@ updateMap <- function(userInfo) {
 
 ## Main observer function for region selection. All observers are defined here
 selectRegionObserver <- function(input, output, session, userInfo) {
-  
+
   ## Check if map selection has been made
   observeEvent(input$regionMap_draw_all_features, {
     selections <- input$regionMap_draw_all_features$features
     addRegionFilter(selections, userInfo)
   })
-  
+
 }
 
 
@@ -188,26 +188,26 @@ selectRegionObserver <- function(input, output, session, userInfo) {
 ## Main render function for map selection. All UI render function are here
 selectRegionRender <- function(input, output, session, userInfo) {
   userInfo$redrawMap <- 0
-  
+
   ## Map selector
   output$selectRegion <- renderUI({
     loginfo("rendering region")
     tagList(uiOutput("mapTitle"),
             uiOutput("displayMap"))
   })
-  
+
   ## Map title
   output$mapTitle <- renderUI({
-    h4(geti18nValue("title.region", userInfo$lang))
+    filterHeader(REGION_FILTER, userInfo)
   })
-  
+
   ## Map container
   output$displayMap <- renderUI({
     loginfo("renderMap")
     div(class = "displayMap",
         leafletOutput("regionMap", height = "100%", width = "100%"))
   })
-  
+
   ## Map
   output$regionMap <-  renderLeaflet({
     redraw <- userInfo$redrawMap > 0
@@ -236,7 +236,7 @@ selectRegionRender <- function(input, output, session, userInfo) {
         )
       if (redraw) {
         updateMap(userInfo)
-        
+
       }
       map
     }, message = "Patience...")

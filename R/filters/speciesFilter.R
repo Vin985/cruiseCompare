@@ -43,25 +43,25 @@ getSpeciesValue <- function(condition, userInfo, fullName = TRUE) {
 speciesFilter <- function(data, condition) {
   loginfo("Filtering by species with species: %s", condition)
   if (length(condition) > 0) {
-    
+
     # get all watch ids to calculate the effort
     nodup <- data[!duplicated(data@data[, "WatchID"]), ]
-    
+
     # get all data concerning selected species
     temp <- data[data$Alpha %in% condition[[TYPE_SPECIES]], ]
-    
+
     # Reset everything
     nodup$Count <- NA
     nodup$Alpha <- ""
     nodup$Distance <- NA
-    
+
     # Remove all watches where the selected species were seen
     tmpid <- unique(temp$WatchID)
     nodup <- nodup[!nodup$WatchID %in% tmpid, ]
-    
+
     # Add selected species
     data <- rbind(nodup, temp)
-    
+
   }
   return(data)
 }
@@ -71,10 +71,10 @@ speciesFilter <- function(data, condition) {
 addSpeciesFilter <- function(selections, userInfo) {
   filter <- getCurrentFilter(userInfo, SPECIES_FILTER)
   condition <- getCondition(filter)
-  
+
   loginfo("add species filter: %s", selections)
   condition[[TYPE_SPECIES]] <- selections
-  
+
   filter <- setCondition(condition, filter)
   addFilterToSubset(userInfo, filter)
 }
@@ -85,7 +85,7 @@ addSpeciesFilter <- function(selections, userInfo) {
 ###############
 
 speciesFilterEventHandler <- function(input, output, session, userInfo) {
-  event <- isolate(userInfo$event) 
+  event <- isolate(userInfo$event)
   if (event$type == CHANGE_LANG_EVENT || event$type == CHANGE_PAGE_EVENT){
     ## Update checkbox label
     updateCheckboxInput(session,
@@ -98,11 +98,11 @@ speciesFilterEventHandler <- function(input, output, session, userInfo) {
 
 
 
-## Get the list of species based on subset and display common names or not 
+## Get the list of species based on subset and display common names or not
 getSpeciesChoices <- function(userInfo, useNames) {
   logdebug("Update species choices")
   names <- isolate(userInfo$species)
-  
+
   ## If a subset already exists, limit the number of species
   ## to the ones found in the subset
   data <- getCurrentSubsetData(userInfo)
@@ -111,7 +111,7 @@ getSpeciesChoices <- function(userInfo, useNames) {
     sp <- sp[sp != ""]
     names <- unique(names[names$Alpha %in% sp, ])
   }
-  
+
   ## Use common names
   if (!is.null(useNames) && useNames) {
     lan <- geti18nValue(paste0("species.", userInfo$lang), userInfo$lang)
@@ -121,10 +121,10 @@ getSpeciesChoices <- function(userInfo, useNames) {
     names <- names[order(names$Alpha), ]
     labels <- names$Alpha
   }
-  
+
   choices <- as.list(names$Alpha)
   names(choices) <- labels
-  
+
   # return(list(NOGA = "NOGA"))
   return(choices)
 }
@@ -160,15 +160,15 @@ selectSpeciesObserver <-
     ##Isolate species names and codes
     userInfo$species <-
       isolate(distinct(dplyr::select(getFullData(as.df = TRUE), Alpha, English, French, Latin)))
-    
-    
+
+
     ## Update choices list if names are selected
     observeEvent(input$useNames, {
       updateSpeciesInput(input, session, userInfo)
       session$userData$useSpeciesNames <- input$useNames
     }, ignoreInit = TRUE)
-    
-    
+
+
     ## If species are selected, add to selection
     observeEvent(input$speciesFilter, {
       addSpeciesFilter(input$speciesFilter, userInfo)
@@ -187,9 +187,9 @@ selectSpeciesRender <- function(input, output, session, userInfo) {
   session$userData$useSpeciesNames <- FALSE
   ## Species title
   output$speciesTitle <- renderUI({
-    h4(geti18nValue("title.species", userInfo$lang))
+    filterHeader(SPECIES_FILTER, userInfo)
   })
-  
+
   ## Species selector
   output$selectSpecies <- renderUI({
     isolate({

@@ -26,7 +26,7 @@ initDateFilter <- function(input, output, session, userInfo) {
 ####################
 
 
-## Get month names for display 
+## Get month names for display
 getMonthsNames <- function(lang) {
   unlist(lapply(1:12, function(x, lang) {
     geti18nValue(paste0("month.", x), lang)
@@ -43,8 +43,8 @@ getMonthsValue <- function(condition, userInfo) {
 
 getRangeValue <- function(condition, userInfo) {
   i18nInsert("range.value",
-             replace = c(start = as.character(condition[1]), 
-                         end = as.character(condition[2])), 
+             replace = c(start = as.character(condition[1]),
+                         end = as.character(condition[2])),
              userInfo$lang)
 }
 
@@ -57,7 +57,7 @@ getRangeValue <- function(condition, userInfo) {
 ## Filter data by date
 dateFilter <- function(data, condition) {
   loginfo("filtering by date: %s", condition)
-  
+
   if (!is.null(condition$range)) {
     # Filter by range
     data <-
@@ -67,13 +67,13 @@ dateFilter <- function(data, condition) {
     # Filter by years
     data <- data[data$Year %in% as.numeric(condition$years),]
   }
-  
+
   if (!is.empty(condition$months)) {
     # Filter by months
     data <- data[data$Month %in% as.numeric(condition$months), ]
   }
-  
-  
+
+
   return(data)
 }
 
@@ -82,16 +82,16 @@ dateFilter <- function(data, condition) {
 addDateFilter <- function(selections, type, userInfo) {
   filter <- getCurrentFilter(userInfo, DATE_FILTER)
   condition <- getCondition(filter)
-  
+
   ## Range and years a mutually exclusive. If one is selected, clear the other
   if (type == TYPE_RANGE) {
     condition[[TYPE_YEARS]] <- NULL
   } else if (type == TYPE_YEARS) {
     condition[[TYPE_RANGE]] <- NULL
   }
-  
+
   condition[[type]] <- selections
-  
+
   filter <- setCondition(condition, filter)
   addFilterToSubset(userInfo, filter)
 }
@@ -110,7 +110,7 @@ dateFilterEventHandler <- function(input, output, session, userInfo) {
   }
 
   updateDateChoices(input, session, userInfo, event = event$type)
-  
+
 }
 
 ## Update date inputs
@@ -123,8 +123,8 @@ updateDateChoices <-
     maxRange <- NULL
     startRange <- NULL
     endRange <- NULL
-    
-    
+
+
     if (event == CHANGE_LANG_EVENT) {
       ## Language changed, update labels only
       monthChoices <- 1:12
@@ -136,13 +136,13 @@ updateDateChoices <-
       minRange <- bounds[1]
       maxRange <- bounds[2]
     }
-    
+
     ## update selection based on filters
     filters <- getCurrentCondition(userInfo, DATE_FILTER)
     selectDateBy <-
       ifelse(is.null(filters$range), TYPE_YEARS, TYPE_RANGE)
     restrictDate <- !is.null(filters$months)
-    
+
     ## Update inputs based on range or years
     if (selectDateBy == TYPE_RANGE) {
       if (is.null(filters$range)) {
@@ -154,7 +154,7 @@ updateDateChoices <-
         startRange <- filters$range[1]
         endRange <- filters$range[2]
       }
-      
+
       updateDateRangeInput(
         session,
         "dateRange",
@@ -178,7 +178,7 @@ updateDateChoices <-
         )
       )
     }
-    
+
     ## Update months input
     if (restrictDate) {
       selectedMonths <- filters$months
@@ -194,13 +194,13 @@ updateDateChoices <-
         )
       )
     }
-    
-    
+
+
     if (event == CHANGE_SUBSET_EVENT) {
       # Subset changed, update all inputs
       updateRadioButtons(session, "selectDateBy", selected = selectDateBy)
       updateCheckboxInput(session, "restrictDate", value = restrictDate)
-      
+
     } else if (event == CHANGE_LANG_EVENT) {
       # Language changed, update labels only
       selectDateByChoices <- list(TYPE_YEARS, TYPE_RANGE)
@@ -217,7 +217,7 @@ updateDateChoices <-
         inline = TRUE,
         selected = selectDateBy
       )
-      
+
       updateCheckboxInput(
         session,
         "restrictDate",
@@ -240,14 +240,14 @@ selectDateObserver <-
         addDateFilter(NULL, type = TYPE_YEARS, userInfo)
       }
     }, ignoreInit = TRUE)
-    
+
     ## Remove all months if no restriction
     observeEvent(input$restrictDate, {
       if (!input$restrictDate) {
         addDateFilter(NULL, type = TYPE_MONTHS, userInfo)
       }
     }, ignoreInit = TRUE)
-    
+
     ## Add range filter
     observeEvent(input$dateRange, {
       addDateFilter(input$dateRange, type = TYPE_RANGE, userInfo)
@@ -257,28 +257,13 @@ selectDateObserver <-
     observeEvent(input$dateYears, {
       addDateFilter(input$dateYears, type = TYPE_YEARS, userInfo)
     }, ignoreNULL = FALSE, ignoreInit = TRUE)
-    
+
     ## Add months filter
     observeEvent(input$dateMonths, {
       addDateFilter(input$dateMonths, type = TYPE_MONTHS, userInfo)
     }, ignoreNULL = FALSE, ignoreInit = TRUE)
-    
-    
-    # ## Data has been subsetted, update date selection
-    # observeEvent(userInfo[[SUBSET_DATA_EVENT]], {
-    #   
-    # })
-    # 
-    # ## Update inputs labels if language change
-    # observeEvent(userInfo[[CHANGE_LANG_EVENT]], {
-    #   updateDateChoices(input, session, userInfo, event = CHANGE_LANG_EVENT)
-    # })
-    # 
-    # ## Change subset
-    # observeEvent(userInfo[[CHANGE_SUBSET_EVENT]], {
-    #   updateDateChoices(input, session, userInfo, event = CHANGE_SUBSET_EVENT)
-    # })
-    # 
+
+
   }
 
 
@@ -309,13 +294,13 @@ setDateData <- function(userInfo) {
 
 ## Main render function for date selection. All UI render function are here
 selectDateRender <- function(input, output, session, userInfo) {
-  
+
   dateInfo <- isolate(setDateData(userInfo))
-  
+
   selectDateBy <- list(TYPE_YEARS, TYPE_RANGE)
   months <- 1:12
-  
-  
+
+
   output$dateRangeSelect <- renderUI({
     isolate({
       min <- dateInfo$min
@@ -330,7 +315,7 @@ selectDateRender <- function(input, output, session, userInfo) {
       )
     })
   })
-  
+
   output$dateYearsSelect <- renderUI({
     isolate({
       years <- dateInfo$years
@@ -346,7 +331,7 @@ selectDateRender <- function(input, output, session, userInfo) {
       )
     })
   })
-  
+
   ## Select by years or by range
   output$dateSelectionMode <- renderUI({
     # Select by range
@@ -357,7 +342,7 @@ selectDateRender <- function(input, output, session, userInfo) {
       uiOutput("dateYearsSelect")
     }
   })
-  
+
   ## Restrict date by months
   output$dateRestriction <- renderUI({
     if (input$restrictDate) {
@@ -376,13 +361,13 @@ selectDateRender <- function(input, output, session, userInfo) {
       })
     }
   })
-  
-  
+
+
   ## Date title
   output$dateTitle <- renderUI({
-    h4(geti18nValue("title.date", userInfo$lang))
+    filterHeader(DATE_FILTER, userInfo)
   })
-  
+
   ## Date UI
   output$selectDate <- renderUI({
     isolate({

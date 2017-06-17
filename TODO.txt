@@ -1,10 +1,27 @@
+Modifications EC
+-----------------
+
+Ajout d'aide
+- Remplir aide
+- Ajout aide globale
+- ajout aide analyse donnees
+- ajout aide generation de rapport
+
+Importation des donnees
+- Observer/cruise Id: filtre a afficher si manquant?
+- selection des especes: langue
+- Verifier la presence des champs obligatoires
+- SMP_LABEL avec CruiseID
+
+
+
 
 General
 --------
 
 - Changer le nom des subsets apres creation
 - Ajouter un avertissement de ralentissement si le nombre d'observations est trop grand
-- Assurer une navigation fluide (garder en memoire les informations de l'utilisateur) 
+- Assurer une navigation fluide (garder en memoire les informations de l'utilisateur)
 - Afficher le nombre d'observations
 
 Filtres
@@ -30,7 +47,7 @@ Comparaison de rapports
 
 
 
-Bugs 
+Bugs
 -----
 
 - Plantage si la combinaison de filtres aboutit a zero observation

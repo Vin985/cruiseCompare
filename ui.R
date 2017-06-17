@@ -2,7 +2,7 @@ library(shiny)
 library(leaflet)
 
 # Define UI for application that draws a histogram
-shinyUI(fluidPage(
+shinyUI(bootstrapPage(
   includeCSS("www/css/styles.css"),
   fluidRow(class = "topRow",
   column(10, uiOutput("subsetTabs")),

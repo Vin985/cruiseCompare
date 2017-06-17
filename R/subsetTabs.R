@@ -2,6 +2,7 @@
 
 
 
+
 ###################
 ### Initialize
 ##################
@@ -9,10 +10,10 @@
 changeSubsets <- function(input, output, session, userInfo) {
   ## Observers for changing subsets
   changeSubsetsObserver(input, output, session, userInfo)
-  
+
   ## Render for changing subsets
   changeSubsetsRender(input, output, session, userInfo)
-  
+
 }
 
 
@@ -39,45 +40,45 @@ addNewSubset <- function(input, output, userInfo) {
   loginfo("Add new subset")
   # Get subset label
   subsetLabel <- input$subsetLabel
-  
+
   # Create the new subset
   subsetId <- createSubset(userInfo, input$subsetLabel)
-  
+
   # Use filters from another subset?
   if (input$useFilterChoices) {
     # get the selected subset's filter
     subsetFilters <-
       getFiltersBySubset(input$subsetFilterChoices, userInfo)
-    
+
     # get the names of the list
     # filterNames <- names(getFilterValues(input$subsetFilterChoices, userInfo))
     filterNames <- getFilterNamesList(subsetFilters)
-    
+
     # Iterate on filternames to see if inputs are selected
     lapply(filterNames, function(filterName, input, userInfo, subsetId) {
       inputId <- paste0("filter.", filterName)
       if (input[[inputId]]) {
         ## filter ids are: 1. Filter name, 2. Filter type
         ids <- strsplit(filterName, "\\.")[[1]]
-        
+
         ## Get the current condition for the new subset
         condition <-
           getConditionBySubset(subsetId, userInfo, ids[1])
         ## Get the selection of the old subset
         selection <-
           getFilterSelection(userInfo, ids[1], ids[2], input$subsetFilterChoices)
-        
+
         condition[[ids[2]]] <- selection
-        
+
         filter <- ECFilter(type = ids[1],
                            condition = condition)
-        
+
         addFilterToSubset(userInfo,
                           filter = filter,
                           subsetId = subsetId)
       }
     }, input, userInfo, subsetId)
-    
+
   }
   subsetId
 }
@@ -87,12 +88,12 @@ changeSubsetsObserver <-
   function(input, output, session, userInfo) {
     ## Generate observers for subset links
     generateSubsetsObservers(input, session, userInfo)
-    
+
     ## User want to add a subset, display the form
     observeEvent(input$addSubset, {
       showModal(addSubsetModal(userInfo))
     })
-    
+
     ## Create a new subset
     observeEvent(input$createSubset, {
       id <- addNewSubset(input, output, userInfo)
@@ -103,12 +104,12 @@ changeSubsetsObserver <-
         launchEvent(CHANGE_SUBSET_EVENT, userInfo)
       }
     })
-    
+
     ## Close the create subset window
     observeEvent(input$cancelSubset, {
       removeModal(session)
     })
-    
+
   }
 
 
@@ -129,28 +130,32 @@ createSubsetLinkRender <- function(subsetId, userInfo, selected) {
        actionLink(id, getLabel(subset)))
 }
 
- 
+
 
 changeSubsetsRender <- function(input, output, session, userInfo) {
   output$subsetTabs <- renderUI({
-    subsets <- names(getSubsets(userInfo, isolate = FALSE))
-    selected <- getCurrentSubsetId(userInfo, isolate = FALSE)
-    tagList(div(
-      class = "subsetLinks",
-      lapply(subsets, createSubsetLinkRender, userInfo, selected),
-      uiOutput("addSubsetLink", inline = TRUE)
-    ))
-  })
-  
-  output$addSubsetLink <- renderUI({
-    if (userInfo$page == SELECTION_PAGE) {
-    span(class = "subsetLink addSubset", actionLink(
-      "addSubset",
-      " + ",
-      title = geti18nValue("add.subset.title", userInfo$lang)))
+    if (userInfo$page != IMPORT_DATA_PAGE) {
+      subsets <- names(getSubsets(userInfo, isolate = FALSE))
+      selected <- getCurrentSubsetId(userInfo, isolate = FALSE)
+      tagList(div(
+        class = "subsetLinks",
+        lapply(subsets, createSubsetLinkRender, userInfo, selected),
+        uiOutput("addSubsetLink", inline = TRUE)
+      ))
     }
   })
-  
+
+  output$addSubsetLink <- renderUI({
+    if (userInfo$page == SELECTION_PAGE) {
+      span(class = "subsetLink addSubset",
+           actionLink(
+             "addSubset",
+             " + ",
+             title = geti18nValue("add.subset.title", userInfo$lang)
+           ))
+    }
+  })
+
   ## Display filter options to create a new subset from another one
   output$subsetFilterSelect <- renderUI({
     if (input$useFilterChoices) {
@@ -173,7 +178,7 @@ changeSubsetsRender <- function(input, output, session, userInfo) {
       )
     }
   })
-  
+
   ## Iterate on filters to generate checkboxes
   output$displayFilters <- renderUI({
     if (!is.empty(input$subsetFilterChoices)) {
