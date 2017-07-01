@@ -41,6 +41,20 @@ initializeFilters <-
     applyFunctionList(initFunctions, input, output, session, userInfo)
   }
 
+getFilterColumns <- function(filterList) {
+  vars <- paste0(toupper(filterList), "_COLUMNS")
+  unlist(lapply(vars, get))
+}
+
+checkRequirements <-
+  function(filterList,
+           userInfo) {
+    reqFunctions <-
+      paste0("canUse", capitalizeFirst(filterList), "Filter")
+    res <- unlist(applyFunctionList(reqFunctions, userInfo))
+    filterList[res]
+  }
+
 propagateEvent <-
   function(filterList,
            input,
@@ -62,14 +76,14 @@ applyFunctionList <- function(funcList, ...) {
 filterBy <- function(by, filters, data) {
   # Get the filter
   filter <- filters[[by]]
-  
+
   # if it exists, Call the "filter" function. It should be named
   # *by*Filter. E.g: observerFilter if by equals "observer"
   if (!is.null(filter)) {
     filterFunction <- searchFunction(paste0(by, "Filter"))
     data <- filterFunction(data, getCondition(filter))
   }
-  
+
   data
 }
 
@@ -125,7 +139,7 @@ getCurrentCondition <- function(userInfo, type) {
 getConditionValues <- function(type, condition, ...) {
   ## Create a single string with values
   cond <- condition[[type]]
-  funcName <- paste0("get", capitalizeFirst(type), "Value") 
+  funcName <- paste0("get", capitalizeFirst(type), "Value")
   if (exists(funcName)) {
     FUN <- get(funcName)
     return(FUN(cond, ...))
@@ -148,7 +162,7 @@ getFilterData <- function(filter, ...) {
 
 # getFilterValue <- function(filter, ...) {
 #   values <- lapply(names(condition), function(type, condition,...) {
-#   
+#
 #     if (type == TYPE_CRUISE) {
 #       res <- lapply(cond, getCruiseValue, userInfo)
 #       paste0(res, collapse = "; ")
@@ -158,7 +172,7 @@ getFilterData <- function(filter, ...) {
 #   }, condition)
 #   names(values) <- names(condition)
 #   return(values)
-#   
+#
 #   FUN <- searchFunction()
 #   FUN(getCondition(filter), ...)
 # }
@@ -214,20 +228,20 @@ getFilterNamesList <- function(filters) {
 ## Apply filters to extract data for the defined subset
 filterData <- function(subset, userInfo) {
   logdebug("filtering...")
-  
+
   # Get filters for the current subset
   filters <- getFilters(subset)
-  
+
   # Get whole data
-  tmp <- isolate(userInfo$data)
-  
+  tmp <- getFullData(userInfo)
+
   # Apply filters
-  for (filter in filterList) {
+  for (filter in isolate(userInfo$filterList)) {
     tmp <- filterBy(filter, filters, tmp)
   }
-  
+
   analyzed <- analyzeData(tmp@data)
-  
+
   list(raw = tmp, analyzed = analyzed)
 }
 
@@ -240,4 +254,4 @@ filterSubsets <- function(userInfo) {
     names(subsetsData) <- names(subsets)
     userInfo$subsetData <- subsetsData
   }
-} 
+}

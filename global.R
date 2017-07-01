@@ -120,7 +120,9 @@ DENSITY_MAP_PROJ <-
 PROJ_LAMBERT <-
   "+proj=lcc +lat_1=46 +lat_2=60 +lat_0=44 +lon_0=-68.5 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"
 
-
+## List of filter. The order of the list determines the order the filters will be
+## applied
+FILTER_LIST <- c(OBSERVER_FILTER, DATE_FILTER, REGION_FILTER, SPECIES_FILTER)
 
 
 ### Extract ECSAS Data
@@ -142,25 +144,19 @@ PROJ_LAMBERT <-
 # save(ecsas, file = file.path(ASSETS_DIR, "ECSAS_filtered.Rdata"))
 
 
-load(file.path(ASSETS_DIR, "ECSAS_filtered.Rdata"))
-ecsas <- cleanDatabase(ecsas)
-spdata <- toSpatialDataframe(ecsas, PROJ_AREA)
+# load(file.path(ASSETS_DIR, "ECSAS_filtered.Rdata"))
+# ecsas <- cleanDatabase(ecsas)
+# spdata <- toSpatialDataframe(ecsas, PROJ_AREA)
 
 
 LAND_MAP_LAYER <- "ne_10m_land"
 ALL_MAP_SHP <- readOGR(MAPS_DIR, LAND_MAP_LAYER)
-databox <- bbox(spdata)
-databox <- databox + c(0, -20, 20, 10)
-LAND_MAP_SHP <- gIntersection(bbox2pol(databox, proj4string = PROJ_AREA), ALL_MAP_SHP, byid = T)
+SHP_BOUNDS_BUFFER <- c(0, -20, 20, 10)
+
+# databox <- bbox(spdata)
+# databox <- databox + c(0, -20, 20, 10)
+# LAND_MAP_SHP <- gIntersection(bbox2pol(databox, proj4string = PROJ_AREA), ALL_MAP_SHP, byid = T)
 
 # Default grid size for distance anlaysis in km
 DEFAULT_GRIDSIZE <- 100
 
-## Get the full dataset from reactive values
-getFullData <- function(as.df = FALSE) {
-  if (as.df) {
-    spdata@data
-  } else {
-    spdata
-  }
-}

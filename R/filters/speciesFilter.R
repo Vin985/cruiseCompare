@@ -6,9 +6,20 @@ SPECIES_FILTER <- "species"
 ## Type of filters
 TYPE_SPECIES <- "species"
 
+SPECIES_COLUMNS <- c(col.species.english = "English",
+                     col.species.french = "French")
+
 ###################
 ### Initialize
 ##################
+
+canUseSpeciesFilter <- function(userInfo) {
+  d <- getFullData(userInfo, as.df = TRUE)
+  if (any(!SPECIES_COLUMNS %in% names(d))) {
+    return(FALSE)
+  }
+  return(TRUE)
+}
 
 
 ## Main entry for the filter. Register Observers and Renders
@@ -159,7 +170,7 @@ selectSpeciesObserver <-
   function(input, output, session, userInfo) {
     ##Isolate species names and codes
     userInfo$species <-
-      isolate(distinct(dplyr::select(getFullData(as.df = TRUE), Alpha, English, French, Latin)))
+      isolate(distinct(dplyr::select(getFullData(userInfo, as.df = TRUE), Alpha, English, French, Latin)))
 
 
     ## Update choices list if names are selected
@@ -187,7 +198,7 @@ selectSpeciesRender <- function(input, output, session, userInfo) {
   session$userData$useSpeciesNames <- FALSE
   ## Species title
   output$speciesTitle <- renderUI({
-    filterHeader(SPECIES_FILTER, userInfo)
+    headerWithHelp(SPECIES_FILTER, userInfo)
   })
 
   ## Species selector

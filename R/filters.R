@@ -2,13 +2,11 @@
 ### Initialize
 ##################
 
-## List of filter. The order of the list determines the order the filters will be
-## applied
-filterList <- c(OBSERVER_FILTER, DATE_FILTER, REGION_FILTER, SPECIES_FILTER)
-
 ## Define all filters
 selectDataFilters <- function(input, output, session, userInfo) {
 
+  filterList <- checkRequirements(FILTER_LIST, userInfo)
+  userInfo$filterList <- filterList
   initializeFilters(filterList, input, output, session, userInfo)
 
   ## Event observers for the selectors
@@ -40,7 +38,7 @@ selectDataFiltersObservers <- function(input, output, session, userInfo) {
   })
 
   observeEvent(userInfo$event, {
-    propagateEvent(filterList, input, output, session, userInfo)
+    propagateEvent(isolate(userInfo$filterList), input, output, session, userInfo)
   })
 
 }

@@ -105,7 +105,7 @@ densityPath <- file.path(REPORT_FIGS_OUTPUT_DIR,
               paste0("density_", subset, ".png"))
  ##plot map
 png(densityPath, width = 960, height = 960, antialias = "cleartype", units = "px")
-  new.grid2 <- plotDensityModel(density, shpm = LAND_MAP_SHP, lang = userInfo$lang,
+  new.grid2 <- plotDensityModel(density, shpm = userInfo$landShp, lang = userInfo$lang,
                                 legendCex = 1.7, transectsCex = .4, transectsCol = "darkred")
 invisible(dev.off())
  

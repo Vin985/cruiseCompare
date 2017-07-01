@@ -109,7 +109,7 @@ png(
               densities = comparison$densities,
               grid = comparison$grid,
               transects = NULL,
-              shpm = LAND_MAP_SHP,
+              shpm = userInfo$landShp,
               lang = userInfo$lang,
               subsetNames = c("Sous-ensemble 1", "Sous-ensemble 2"),
               legendCex = 1.7

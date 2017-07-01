@@ -6,7 +6,6 @@ shinyServer(function(input, output, session) {
   logdebug("init")
 
   userInfo <- reactiveValues(lang = "fr")
-  userInfo$data <- spdata
   userInfo$subsetCpt <- 1
   userInfo$page <- IMPORT_DATA_PAGE
   createSubset(userInfo)

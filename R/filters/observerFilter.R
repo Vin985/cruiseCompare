@@ -11,10 +11,25 @@ TYPE_CRUISE <- "cruises"
 
 MISC_OBSERVER_LIST <- "observerList"
 
+OBSERVER_COLUMNS <-   c(
+  col.observer.id = "ObserverID",
+  col.cruise.id = "CruiseID",
+  col.cruise.start = "StartDate",
+  col.cruise.end = "EndDate"
+)
+
 
 ###################
 ### Initialize
 ##################
+
+canUseObserverFilter <- function(userInfo) {
+  d <- getFullData(userInfo, as.df = TRUE)
+  if (any(!OBSERVER_COLUMNS %in% names(d))) {
+    return(FALSE)
+  }
+  return(TRUE)
+}
 
 
 ## Main entry for the filter. Register Observers and Renders
@@ -24,7 +39,7 @@ initObserverFilter <- function(input, output, session, userInfo) {
 }
 
 getCruiseValue <- function(cruiseId, userInfo) {
-  data <- getFullData(as.df = TRUE)
+  data <- getFullData(userInfo, as.df = TRUE)
   dates <-
     data[data$CruiseID == cruiseId, c("StartDate", "EndDate")][1,]
   i18nInsert(
@@ -263,7 +278,7 @@ selectObserverRender <- function(input, output, session, userInfo) {
 
   ## Observer title
   output$observerTitle <- renderUI({
-    filterHeader(OBSERVER_FILTER, userInfo)
+    headerWithHelp(OBSERVER_FILTER, userInfo)
   })
 
   ## Select observerss

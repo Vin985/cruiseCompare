@@ -1,5 +1,38 @@
 
 
+prepareData <- function(userInfo) {
+  d <- isolate(userInfo$fullData)
+  # Clean data
+  d <- cleanDatabase(d)
+  # Convert data to spatialDataframe
+  spdata <- toSpatialDataframe(d, PROJ_AREA)
+
+  # resize the whole shp to fit data
+  userInfo$landShp <- resizeShp(spdata)
+  userInfo$fullData <- spdata
+}
+
+
+
+resizeShp <- function(spdata, shp, boundsBuffer, proj) {
+  databox <- bbox(spdata)
+  databox <- databox + SHP_BOUNDS_BUFFER
+  newShp <- gIntersection(bbox2pol(databox, proj4string = PROJ_AREA), ALL_MAP_SHP, byid = T)
+  newShp
+}
+
+
+## Get the full dataset from reactive values
+getFullData <- function(userInfo, as.df = FALSE) {
+  fullData <- isolate(userInfo$fullData)
+  if (!is.null(fullData) && as.df) {
+    fullData@data
+  } else {
+    fullData
+  }
+}
+
+
 cleanDatabase <- function(d) {
   d$Alpha <- as.character(d$Alpha)
   d$Alpha[is.na(d$Alpha) |
@@ -8,17 +41,20 @@ cleanDatabase <- function(d) {
   groups <- read.csv(file.path(ASSETS_DIR, "bird_groups.csv"),
                      header = TRUE,
                      stringsAsFactors = FALSE)
-  
+
   ### get data for french names from EC's official list on my github
   spname <- read.csv(file.path(ASSETS_DIR, "EC_AVIAN_CORE_20161216.csv"),
                      header = TRUE,
                      stringsAsFactors = FALSE)
-  
-  
+
+  # Convert to character then to Date again to make sure we always have the same date
+  d$Date <- as.character(d$Date)
+  d$Date <- as.Date(d$Date, "%Y-%m-%d")
+
   d$English <-
     spname$English_Name[match(d$Alpha, spname$Species_ID)]
   d$French <- spname$French_Name[match(d$Alpha, spname$Species_ID)]
-  
+
   d$English[is.na(d$English)] <- ""
   d$French[is.na(d$French)] <- ""
 
@@ -48,16 +84,16 @@ cleanDatabase <- function(d) {
   d$Distance <- ifelse(k1 & k2, "", d$Distance)
   d$group_detection <- ifelse(k1 & k2, "", d$group_detection)
   d$group_atlas <- ifelse(k1 & k2, "", d$group_atlas)
-  
+
   if (is.null(d$ObserverName)) {
     d$ObserverName <- as.character(d$ObserverID)
   } else {
     d$ObserverName <- as.character(d$ObserverName)
     d$ObserverID <- factor(d$ObserverName)
   }
-  
+
   d$Count <- as.numeric(d$Count)
-  
+
   d
 }
 

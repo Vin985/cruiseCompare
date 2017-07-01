@@ -12,6 +12,7 @@ Importation des donnees
 - selection des especes: langue
 - Verifier la presence des champs obligatoires
 - SMP_LABEL avec CruiseID
+- Supprimer le chargement automatique des donnees
 
 
 

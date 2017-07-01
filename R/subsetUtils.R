@@ -152,12 +152,12 @@ getCurrentSubsetData <- function(userInfo, as.df = FALSE, isolate = TRUE) {
 getCurrentData <- function(userInfo, as.df = TRUE) {
   # Return the current subset data
   data <- getCurrentSubsetData(userInfo)
-  
+
   # If subset is empty return global data
   if (is.empty(data)) {
-    data <- getFullData()
+    data <- getFullData(userInfo)
   }
-  
+
   # Return data as a data.frame instead of a SpatialPointsDataFrame
   if (as.df) {
     return(data@data)
@@ -186,10 +186,10 @@ addFilterToSubset <-
   function(userInfo, filter, subsetId = NULL) {
     # Get subset by id. If null, the current one will be used
     subset <- getSubset(subsetId, userInfo)
-    
+
     # Add filter to subset
     subset <- addFilter(subset, filter)
-    
+
     ## Update subset in userInfo
     setSubset(subset, userInfo)
   }

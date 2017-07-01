@@ -28,14 +28,24 @@ helpPopup <- function(title,
     )
   }
 
-filterHeader <- function(filterName, userInfo) {
+headerWithHelp <- function(filterName, userInfo) {
   tagList(
     h4(geti18nValue(
       paste0("title.", filterName), userInfo$lang
     ), class = "filterHeader"),
     helpPopup(
       geti18nValue(paste0("help.title.", filterName), userInfo$lang),
-      geti18nValue(paste0("help.content.", filterName), userInfo$lang),
+      geti18nValue(paste0("help.content.", filterName), userInfo$lang)
+    )
+  )
+}
+
+labelWithHelp <- function(field, lang, textclass= "") {
+  tagList(
+    i18nTextOutput(field, lang, inline = TRUE, class = textclass),
+    helpPopup(
+      geti18nValue(paste0("help.title.", field), lang),
+      geti18nValue(paste0("help.content.", field), lang)
     )
   )
 }

@@ -9,9 +9,16 @@ TYPE_REGION <- "region"
 
 MISC_REGION_REDRAW <- "redraw"
 
+REGION_COLUMNS <- c()
+
 ###################
 ### Initialize
 ##################
+
+canUseRegionFilter <- function(userInfo) {
+  # No requirements other than lon/lat
+  return(TRUE)
+}
 
 
 ## Main entry for the filter. Register Observers and Renders
@@ -198,7 +205,7 @@ selectRegionRender <- function(input, output, session, userInfo) {
 
   ## Map title
   output$mapTitle <- renderUI({
-    filterHeader(REGION_FILTER, userInfo)
+    headerWithHelp(REGION_FILTER, userInfo)
   })
 
   ## Map container

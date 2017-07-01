@@ -20,7 +20,7 @@ densityMap <- function(input, output, session, userInfo) {
     action <- input$dataAction
     (!is.null(action) && action == DATA_ACTION_COMPARE)
   })
-  
+
   observeEvent(input$displayDensityMap, {
     compare <- isolate(isCompare())
     if (!compare) {
@@ -37,8 +37,8 @@ densityMap <- function(input, output, session, userInfo) {
       )
     }
   }, ignoreInit = TRUE)
-  
-  
+
+
   # generate comparison model
   compareModel <- eventReactive(input$displayDensityMap, {
     if (isCompare()) {
@@ -59,12 +59,12 @@ densityMap <- function(input, output, session, userInfo) {
       compareModels(c(sub1, sub2), input, userInfo)
     }
   }, ignoreInit = TRUE)
-  
+
   # Display the density map
   output$densityMap <- renderPlot({
     compare <- isCompare()
     loginfo("rendering plot")
-    
+
     if (compare ||
         input$showDataType == DENSITY_MAP) {
       withProgress(
@@ -83,7 +83,7 @@ densityMap <- function(input, output, session, userInfo) {
               densities = model$densities,
               grid = model$grid,
               transects = NULL,
-              shpm = LAND_MAP_SHP,
+              shpm = userInfo$landShp,
               lang = userInfo$lang,
               subsetNames = getSubsetLabelsById(model$subsets, userInfo)
             )
@@ -91,7 +91,7 @@ densityMap <- function(input, output, session, userInfo) {
             subsetId <- getCurrentSubsetId(userInfo, isolate = FALSE)
             model <- getDistanceModel(subsetId, userInfo)
             if (!is.null(model)) {
-              plotDensityModel(model$density, shpm = LAND_MAP_SHP, lang = userInfo$lang)
+              plotDensityModel(model$density, shpm = userInfo$landShp, lang = userInfo$lang)
             } else {
               return(NULL)
             }
@@ -99,9 +99,9 @@ densityMap <- function(input, output, session, userInfo) {
         }
       )
     }
-    
+
   })
-  
+
   output$densityMapOptions <- renderUI({
     # grid size
     # display transects
@@ -115,8 +115,8 @@ densityMap <- function(input, output, session, userInfo) {
     }
     tagList(
       column(6, div(class = "gridSize",
-             numericInput("densityGridSize", 
-                             label = geti18nValue("grid.size", userInfo$lang), 
+             numericInput("densityGridSize",
+                             label = geti18nValue("grid.size", userInfo$lang),
                              value = gridSize),
              span("km")),
              i18nTextOutput("warning.grid.size", userInfo$lang,

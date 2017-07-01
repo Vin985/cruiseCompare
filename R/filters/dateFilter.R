@@ -9,9 +9,24 @@ TYPE_YEARS <- "years"
 TYPE_MONTHS <- "months"
 MISC_DATE_INFO <- "dateInfo"
 
+DATE_COLUMNS <- c(col.date.year = "Year",
+                  col.date.month = "Month")
+
 ###################
 ### Initialize
 ##################
+
+canUseDateFilter <- function(userInfo) {
+    d <- getFullData(userInfo)
+    if (any(!DATE_COLUMNS %in% names(d))) {
+      d$Year <- format(d$Date, "%Y")
+      d$Month <- format(d$Date, "%m")
+      userInfo$fullData <- d
+    }
+    # Since date is a required field and month and year can be created,
+    # always return TRUE
+    return(TRUE)
+}
 
 
 ## Main entry for the filter. Register Observers and Renders
@@ -365,7 +380,7 @@ selectDateRender <- function(input, output, session, userInfo) {
 
   ## Date title
   output$dateTitle <- renderUI({
-    filterHeader(DATE_FILTER, userInfo)
+    headerWithHelp(DATE_FILTER, userInfo)
   })
 
   ## Date UI

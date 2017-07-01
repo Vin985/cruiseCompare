@@ -30,9 +30,9 @@ viewDataPage <- function(input, output, session, userInfo) {
   observeEvent(input$selectionPageAction, {
     changePage(SELECTION_PAGE, userInfo)
   }, ignoreInit = TRUE)
-  
+
   densityMap(input, output, session, userInfo)
-  
+
   viewDT <- reactive({
     # Get a dependency on current subsetId
     subsetId  <- getCurrentSubsetId(userInfo, isolate = FALSE)
@@ -61,9 +61,9 @@ viewDataPage <- function(input, output, session, userInfo) {
       )
     ) %>% formatRound(ROUND_COLUMNS[[input$dataType]])
   })
-  
+
   output$dataTable <-  DT::renderDataTable(viewDT())
-  
+
   viewDataUI(input, output, session, userInfo)
 }
 
@@ -81,7 +81,7 @@ viewDataUI <- function(input, output, session, userInfo) {
       fluidRow(uiOutput("viewDataActionButtons"))
     ))
   })
-  
+
   # Information about the subset filters
   output$subsetInfo <- renderUI({
     action <- input$dataAction
@@ -91,7 +91,7 @@ viewDataUI <- function(input, output, session, userInfo) {
       uiOutput("selectCompareSubsets")
     }
   })
-  
+
   # Action buttons: view data or compare subsets
   output$selectDataAction <- renderUI({
     # Only display if two or more subsets
@@ -116,7 +116,7 @@ viewDataUI <- function(input, output, session, userInfo) {
       )
     }
   })
-  
+
   # Main content: chosse between view or compare data
   output$dataContent <- renderUI({
     # if just one subset, never compare
@@ -128,7 +128,7 @@ viewDataUI <- function(input, output, session, userInfo) {
       uiOutput("compareData")
     }
   })
-  
+
   # View data
   output$viewData <- renderUI({
     # Choose between table or density map
@@ -149,7 +149,7 @@ viewDataUI <- function(input, output, session, userInfo) {
     ),
     uiOutput("showData"))
   })
-  
+
   # Show data
   output$showData <- renderUI({
     if (input$showDataType == DATA_TABLE) {
@@ -159,7 +159,7 @@ viewDataUI <- function(input, output, session, userInfo) {
       uiOutput("showDensityMap")
     }
   })
-  
+
   # Show observations table
   output$showDataTable <- renderUI({
     # Select type of data to display
@@ -182,7 +182,7 @@ viewDataUI <- function(input, output, session, userInfo) {
       dataTableOutput("dataTable", width = "90%")
     )
   })
-  
+
   # Density map
   output$showDensityMap <- renderUI({
     loginfo("show Density map UI")
@@ -191,13 +191,13 @@ viewDataUI <- function(input, output, session, userInfo) {
               6, offset = 3, plotOutput("densityMap", height = "550px")
             )))
   })
-  
+
   # Compare subsets
   output$compareData <- renderUI({
     loginfo("compare data UI")
     tagList(uiOutput("showDensityMap"))
   })
-  
+
   # Select subsets to compare
   output$selectCompareSubsets <- renderUI({
     isolate({
@@ -211,8 +211,8 @@ viewDataUI <- function(input, output, session, userInfo) {
       selectSubsetCompare(2, subsetChoices, input, output, userInfo)
     ))
   })
-  
-  
+
+
   # Action buttons: change selection or create report
   output$viewDataActionButtons <- renderUI({
     tagList(div(
@@ -229,15 +229,15 @@ viewDataUI <- function(input, output, session, userInfo) {
       )
     ))
   })
-  
-  
+
+
 }
 
 
 selectSubsetCompare <- function(idx, subsetChoices, input, output, userInfo, reportId = NULL) {
   selectInputId <- paste0("selectCompareSubset", reportId, idx)
   infoOutputId <- paste0("subsetInfoCompare", reportId, idx)
-  
+
   ## Output
   output[[infoOutputId]] <- renderUI({
     div(displaySubsetInfo(input[[selectInputId]], userInfo))
@@ -251,7 +251,7 @@ selectSubsetCompare <- function(idx, subsetChoices, input, output, userInfo, rep
     }
     columnSize <- 6
   }
-  
+
   column(columnSize,
          tagList(
            selectizeInput(

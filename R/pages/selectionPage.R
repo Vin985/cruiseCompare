@@ -4,7 +4,7 @@ SELECTION_PAGE <- "selection"
 
 selectionPage <- function(input, output, session, userInfo) {
 
-  selectDataFilters(input, output, session, userInfo)
+  # selectDataFilters(input, output, session, userInfo)
   createReport(input, output, session, userInfo)
 
 
@@ -15,7 +15,7 @@ selectionPage <- function(input, output, session, userInfo) {
     # userInfo$subsets <- ss
     filterSubsets(userInfo)
     # reset all distance analysis
-    userInfo$distance <- NULL 
+    userInfo$distance <- NULL
     changePage(VIEW_DATA_PAGE, userInfo)
   })
 

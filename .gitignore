@@ -56,3 +56,5 @@ None
 analysis
 dest/figs
 assets/reports/*.md
+*.Rdata
+*.Rhistory

@@ -1,3 +1,15 @@
+
+/*
+ * Row with equal height columns
+ * --------------------------------------------------
+ */
+.row-eq-height {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display:         flex;
+}
+
 input[type="number"] {
   max-width: 60%;
 }
@@ -23,6 +35,23 @@ div.outer {
 
 .helpIcon {
 
+}
+
+.error {
+  color: red;
+}
+
+.required::before {
+  content: "* ";
+  color: red;
+}
+
+.note {
+  color: blue;
+}
+
+.title {
+  padding-bottom: 15px;
 }
 
 .dataImportOptions{
@@ -118,6 +147,12 @@ div.outer {
   width : 95%;
 }
 
+.importAction {
+  padding: 0;
+  height: 100%;
+  align-items: flex-end;
+}
+
 .selectSubsetsCompare {
   display : flex;
   margin-top: 15px;
@@ -149,6 +184,11 @@ div.outer {
   border: 0;
   color: #fff;
   background-color: #4d90fe;
+}
+
+.viewOnMapButton {
+  padding: 10px;
+  margin: 0 10px 15px;
 }
 
 .downloadReportButtons {
