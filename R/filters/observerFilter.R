@@ -12,22 +12,18 @@ TYPE_CRUISE <- "cruises"
 MISC_OBSERVER_LIST <- "observerList"
 
 OBSERVER_COLUMNS <-   c(
-  col.observer.id = "ObserverID",
-  col.cruise.id = "CruiseID",
+  col.observer.name = "ObserverName",
   col.cruise.start = "StartDate",
   col.cruise.end = "EndDate"
 )
-
+#
 
 ###################
 ### Initialize
 ##################
 
 canUseObserverFilter <- function(userInfo) {
-  d <- getFullData(userInfo, as.df = TRUE)
-  if (any(!OBSERVER_COLUMNS %in% names(d))) {
-    return(FALSE)
-  }
+  # All fields are optional or always created
   return(TRUE)
 }
 
@@ -40,17 +36,21 @@ initObserverFilter <- function(input, output, session, userInfo) {
 
 getCruiseValue <- function(cruiseId, userInfo) {
   data <- getFullData(userInfo, as.df = TRUE)
-  dates <-
-    data[data$CruiseID == cruiseId, c("StartDate", "EndDate")][1,]
-  i18nInsert(
-    "cruises.value",
-    replace = c(
-      id = cruiseId,
-      start = format(dates$StartDate, "%Y-%m-%d"),
-      end = format(dates$EndDate, "%Y-%m-%d")
-    ),
-    userInfo$lang
-  )
+  if (!is.null(data$StartDate) & !is.null(data$EndDate)) {
+    dates <-
+      data[data$CruiseID == cruiseId, c("StartDate", "EndDate")][1,]
+    i18nInsert(
+      "cruises.value",
+      replace = c(
+        id = cruiseId,
+        start = format(dates$StartDate, "%Y-%m-%d"),
+        end = format(dates$EndDate, "%Y-%m-%d")
+      ),
+      userInfo$lang
+    )
+  } else {
+    cruiseId
+  }
 }
 
 getCruisesValue <- function(condition, userInfo) {

@@ -10,7 +10,7 @@ createGrid <-
     # need larger buffer than just min max, with 50 km grid cell
     b[, 2] <-  b[, 2] + 1
     b[, 1] <-  b[, 1] - 1
-    
+
     # Build grid
     grid <-
       create.grid(
@@ -40,13 +40,13 @@ createHexGrid <- function(x, width = 100000, seed = 111, convex = TRUE) {
 getBreaks <- function(densities, maxDensity) {
   #select variable to map
   temp <- densities[!is.na(densities$Estimates),]
-  
+
   pos <- temp$Estimates[temp$Estimates > 0]
   neg <- temp$Estimates[temp$Estimates < 0]
-  
+
   bp <- quantile(pos, c(.5, .75, .95))
   bn <- quantile(neg, c(.5, .75, .95))
-  
+
   # Add and substract 0.1 to min/max because of rounding that can
   # mess with intervals
   bp <- c(bp, max(pos) + 0.1)
@@ -56,10 +56,10 @@ getBreaks <- function(densities, maxDensity) {
   } else {
     bn <- c(min(neg) - 0.1, bn)
   }
-  
+
   # combine all breaks
   breaks <- c(bn, bp)
-  
+
   #needed for data below first rounded class
   breaks <- round(breaks, 1)
   breaks
@@ -88,11 +88,11 @@ mapDensitiesToGrid <- function(densities, grid) {
   temp <- densities[idx,]
   row.names(temp) <- row.names(grid)
   grid@data <- join(grid@data, temp, by = "ID")
-  
+
   # Remove unvisited cells
   estimates <- grid$Estimates[!is.na(grid$Estimates)]
   unvisited <- grid[is.na(grid$Estimates),]
-  
+
   breaks <- getBreaks(densities, max(grid$Estimates, na.rm = TRUE))
   # Find in which interval estimates are. Add 1 because 0 is an interval in itself
   grid$classno <- findInterval(grid$Estimates, breaks)
@@ -103,11 +103,11 @@ mapDensitiesToGrid <- function(densities, grid) {
   }
   tags <- getBreakTags(breaks)
   grid$class <- tags[grid$classno]
-  
+
   grid <- grid[order(grid$classno),]
-  
+
   grid$abundance <- grid$km2 * grid$Estimates
-  
+
   return(list(
     breaks = breaks,
     grid = grid,
@@ -130,7 +130,7 @@ getPaletteColors <- function(breaks) {
   }
   br.palette <- colorRampPalette(colorRamp, space = "rgb")
   palette <- c(palette, br.palette(n = length(breaks) - 1))
-  
+
   palette
 }
 
@@ -146,11 +146,11 @@ plotDensityModel <- function(densityModel, ...) {
 plotDensityMap <-
   function(densities, transects, grid, shpm = NULL, lang = "fr", ...) {
     res <- mapDensitiesToGrid(densities, grid)
-    
+
     grid <- res$grid
     unvisited <- res$unvisited
     breaks <- res$breaks
-    
+
     # Earth background
     if (is.null(shpm)) {
       shpm <- readOGR(MAPS_DIR, LAND_MAP_LAYER)
@@ -159,23 +159,23 @@ plotDensityMap <-
     # make sure data and map have the same projection
     prj <- proj4string(grid)
     shpm <- spTransform(shpm, CRS(prj))
-    
-    
+
+
     # comparisons
     sub1 <- sub2 <- NULL
     if (!is.null(grid$Estimates.x)) {
       sub1 <- unvisited[!is.na(unvisited$Estimates.x),]
       sub2 <- unvisited[!is.na(unvisited$Estimates.y),]
     } else {
-      # don't display unvisited cells if no comparison 
+      # don't display unvisited cells if no comparison
       grid <- grid[!is.na(grid$Estimates), ]
     }
-    
+
     # Cells never visites
     # never <- unvisited[is.na(unvisited$Estimates.x) & is.na(unvisited$Estimates.y), ]
     palette <- getPaletteColors(breaks)
     classes <- unique(grid$class[!is.na(grid$class)])
-    
+
     args <- list(...)
     legendTitle <-
       ifelse(is.null(args$legendTitle), geti18nValue("birds.density.legend", lang), args$legendTitle)
@@ -190,8 +190,8 @@ plotDensityMap <-
     } else {
       args$subsetNames
     }
-    
-    
+
+
     bounds <- bbox(grid)
     plot(
       grid,
@@ -215,7 +215,7 @@ plotDensityMap <-
       title = legendTitle,
       cex = legendCex
     )
-    
+
     ## Comparison only: transects visited in one subset but not the other
     if (!is.null(sub1) && !is.null(sub2)) {
       plot(sub1,
@@ -227,13 +227,13 @@ plotDensityMap <-
            border = "black",
            add = T)
       # get legend dimensions
-      tl <- legend(plot = FALSE, 
+      tl <- legend(plot = FALSE,
                    x = "right",
                    bty = "n",
                    legend = subsetNames,
                    title = geti18nValue("visited.cells.legend", lang),
                    cex = legendCex)
-      
+
       legend(
         x = l$rect$left - (tl$rect$w * 1.05 - l$rect$w),
         y = l$rect$top + tl$rect$h * 1.05,
@@ -268,9 +268,9 @@ plotDensityMap <-
         pch = 16
       )
     }
-    
-    
-    
+
+
+
     # boxcut <- par("usr")
     # xxlat <- boxcut[1]
     # m <- expand.grid(xxlat, seq(boxcut[3], boxcut[4], length.out = 100))
@@ -285,9 +285,9 @@ plotDensityMap <-
     # yylat <- sapply(selat, function(k) {
     #   coordinates(p)[which.min(abs(coordinates(p2)[, 2] - k)), 2]
     # })
-    # 
-    # 
-    # 
+    #
+    #
+    #
     # yylon <- boxcut[3] + 100000#par("usr")[3]
     # m <- expand.grid(seq(boxcut[1], boxcut[2], by = 100), yylon)
     # p <- SpatialPoints(m, proj4string = CRS(proj4string(grid)))
@@ -297,48 +297,52 @@ plotDensityMap <-
     # xxlon <- sapply(selon, function(k) {
     #   coordinates(p)[which.min(abs(coordinates(p2)[, 1] - k)), 1]
     # })
-    
+
     xt <- getAxisTicks("x", proj4string(grid))
     yt <- getAxisTicks("y", proj4string(grid))
-      
+
     xticks <- parse(text = paste0(abs(xt), "*degree ~ W"))
     yticks <- parse(text = paste0(yt, "*degree ~ N"))
-    
+
     axis(1, at = as.numeric(names(xt)), labels = xticks, cex.axis = 1.5)
     axis(2, at = as.numeric(names(yt)), labels = yticks, cex.axis = 1.5)
-    
+
     return(grid2)
-    
+
   }
 
 getAxisTicks <- function(type, gridProj) {
   boxcut <- par("usr")
-  i <- if (type == "x") {
-    1
+  if (type == "x") {
+    bounds <- boxcut[1:2]
+    m <- expand.grid(seq(bounds[1], bounds[2], length.out = 100), 1)
+    i <- 1
   } else {
-    3
+    bounds <- boxcut[3:4]
+    m <- expand.grid(1, seq(bounds[1], bounds[2], length.out = 100))
+    i <- 2
   }
-  m <- expand.grid(1, seq(boxcut[i], boxcut[i + 1], length.out = 100))
+
   p <- SpatialPoints(m, proj4string = CRS(gridProj))
   p2 <- spTransform(p, CRS(DENSITY_MAP_PROJ))
-  r <- range(coordinates(p2)[, 2])
+  r <- range(coordinates(p2)[, i])
   ticks <- pretty(r, n = 7)
-  
+
   old <- sapply(ticks, function(k) {
-    coordinates(p)[which.min(abs(coordinates(p2)[, 2] - k)), 2]
+    coordinates(p)[which.min(abs(coordinates(p2)[, i] - k)), i]
   })
-  
+
   # if ticks are outside range, then draw it outside the plot
   # this is to ensure axes are drawn all along the plot and not only
   # between ticks
   if (ticks[1] < r[1])
-    old[1] <- boxcut[i] - 100
+    old[1] <- bounds[1] - 100
   if (ticks[length(ticks)] > r[2])
-    old[length(ticks)] <- boxcut[i + 1] + 100
-  
+    old[length(ticks)] <- bounds[2] + 100
+
   names(ticks) <- old
-  
-  
-  
+
+
+
   return(ticks)
 }

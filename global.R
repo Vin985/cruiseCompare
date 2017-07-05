@@ -65,6 +65,16 @@ REPORTS_DIR <- file.path(ASSETS_DIR, "reports")
 TOOLS_DIR <- file.path(ASSETS_DIR, "tools")
 ANALYSIS_DIR <- file.path(DEST_DIR, "analysis")
 
+REPORT_OUTPUT_DIR <- DEST_DIR
+REPORT_FIGS_OUTPUT_DIR <- file.path(REPORT_OUTPUT_DIR, "figs")
+
+# Make sure destination directories are created
+if (!dir.exists(REPORT_OUTPUT_DIR))
+  dir.create(REPORT_OUTPUT_DIR)
+if (!dir.exists(REPORT_FIGS_OUTPUT_DIR))
+  dir.create(REPORT_FIGS_OUTPUT_DIR)
+if (!dir.exists(ANALYSIS_DIR))
+  dir.create(ANALYSIS_DIR)
 
 setwd(ROOT_DIR)
 
@@ -99,6 +109,11 @@ source(file.path(PAGES_SRC_DIR, "viewDataPage.R"))
 
 logReset()
 logging::basicConfig("INFO")
+
+## Shiny upload limit
+# Limit to 30MB
+options(shiny.maxRequestSize = 30*1024^2)
+
 
 
 ## Events
@@ -151,7 +166,7 @@ FILTER_LIST <- c(OBSERVER_FILTER, DATE_FILTER, REGION_FILTER, SPECIES_FILTER)
 
 LAND_MAP_LAYER <- "ne_10m_land"
 ALL_MAP_SHP <- readOGR(MAPS_DIR, LAND_MAP_LAYER)
-SHP_BOUNDS_BUFFER <- c(0, -20, 20, 10)
+SHP_BOUNDS_BUFFER <- c(-10, -20, 20, 10)
 
 # databox <- bbox(spdata)
 # databox <- databox + c(0, -20, 20, 10)

@@ -51,14 +51,14 @@ analyzeData <- function(data) {
   data <- droplevels(data)
   dt <- data.table(data)
   setkey(dt, WatchID)
-  
+
   dt$Alpha[dt$Alpha == ""] <- NA
   dt$English[dt$English == ""] <- NA
-  
+
   ##adapt species names
   dt$English <- as.factor(dt$English)
   dt$Alpha <- as.factor(dt$Alpha)
-  
+
   ### Total densities
   total <- dt[, .(
     WatchLenKm = mean(WatchLenKm, na.rm = TRUE),
@@ -68,8 +68,8 @@ analyzeData <- function(data) {
   total[is.na(Count)] <- 0
   total[, Densities := Count / WatchLenKm]
   total <- total[!is.na(WatchLenKm)]
-  
-  
+
+
   ### Species descriptive stats
   birds <- dt[, .(
     Flocks = .N,
@@ -82,10 +82,10 @@ analyzeData <- function(data) {
   birds[, meanFlock := round(Count / Flocks, 1)]
   # birds <- birds[!is.na(cv)]
   setkey(birds, English)
-  
+
   #descriptives
   observer <- getObserverNames(dt$ObserverID)
-  
+
   list(total = total, birds = birds)
 }
 
@@ -98,11 +98,11 @@ getDetectionModel <- function(dt) {
   total <- dt[, .(WatchLenKm = mean(WatchLenKm, na.rm = TRUE)),
               by = WatchID]
   total <- total[!is.na(WatchLenKm)]
-  
+
   # Multiply by 0.3 because we have linear transects 300m wide
   dt <- droplevels(dt)
   dt[, STR_AREA := sum(total$WatchLenKm) * 0.3]
-  
+
   all.dist <- mcds.wrap(
     dt,
     SMP_EFFORT = "WatchLenKm",
@@ -123,20 +123,20 @@ getDetectionModel <- function(dt) {
     pathMCDS = TOOLS_DIR,
     verbose = FALSE
   )
-  
+
   all.sp.best <- keep.best.model(all.dist)
-  
-  
+
+
   mod.selected <- which.min(sapply(1:length(all.dist), function(i) {
     all.dist[[i]]$AIC[3]
   }))
-  
+
   key <-
     sapply(strsplit(names(all.dist)[mod.selected], "_"), "[", 2)
   exp <-
     sapply(strsplit(names(all.dist)[mod.selected], "_"), "[", 3)
   estimator = list(c(key, exp))
-  
+
   return(list(
     idx = mod.selected,
     model = all.sp.best,
@@ -186,32 +186,32 @@ getDensityModel <-
       data <- as.data.table(data)
     }
     transects <- getTransects(data)
-    
+
     # compute cell/zone area (km2) : needs lambert projection for distance
     tmp <- spTransform(grid, CRS(PROJ_LAMBERT))
     area <- gArea(tmp, byid = T) / 1000000
     grid$km2 <- area
-    
+
     # select visited cells and intersect with shp
     inters <- gIntersects(transects, grid, byid = TRUE)
     ingrid <- vapply(1:nrow(inters), function(idx) {any(inters[idx,])}, FALSE)
     grid2 <- grid[ingrid, ]
-    
+
     # Overlay transects and grid and attribute squares to observations
     x <- over(transects, grid2)
     data$square <- x$ID
     data$square_area <- x$km2
     data <- data[!is.na(data$square), ]
-    
+
     data$SMP_LABEL <-
       paste(data$CruiseID, data$Date, data$square, sep = "_")
-    
+
     # Construct sample labels considering that day transects can overlap with multiple squares
     temp <-
       aggregate(WatchLenKm ~ SMP_LABEL, data = unique(data[, c("SMP_LABEL", "WatchID", "WatchLenKm"), with = FALSE]), sum)
     names(temp)[2] <- "SMP_EFFORT"
     d <- merge(data, temp, by = "SMP_LABEL", sort = FALSE)
-    
+
     d <-
       d[, c(
         "square",
@@ -223,7 +223,7 @@ getDensityModel <-
         "Count",
         "Alpha"
       ), with = FALSE]
-    
+
     # Aggregate observations by label
     dd <- d[, .(V1 = sum(Count, na.rm = TRUE)), by = SMP_LABEL]
     # get the label name for transect without observations
@@ -233,7 +233,7 @@ getDensityModel <-
       d[(d$SMP_LABEL %in% dd$SMP_LABEL & !duplicated(d$SMP_LABEL)) |
           (!d$SMP_LABEL %in% dd$SMP_LABEL & !(d$Alpha == "")), ]
     setkey(d, square)
-    
+
     # distance sampling w/spatial stratification
     path <- ANALYSIS_DIR
     pathMCDS <- TOOLS_DIR
@@ -248,7 +248,7 @@ getDensityModel <-
     stratum <- "STR_LABEL"
     detection <- "All"
     empty <- NULL
-    
+
     units = list(
       Type = "Line",
       Distance = "Perp",
@@ -256,7 +256,7 @@ getDensityModel <-
       Distance_units = "Meters",
       Area_units = "Square kilometers"
     )
-    
+
     #analyse - calcul des densites
     x <-
       mcds.wrap(
@@ -278,7 +278,7 @@ getDensityModel <-
         SIZE = SIZE,
         verbose = FALSE
       )
-    
+
     return(list(
       model = x,
       grid = grid,
@@ -292,11 +292,11 @@ getDensities <- function(model) {
   densities <-
     stratums[stratums$Parameters == "D", c("Stratum", "Estimates", "SE", "% of var.")]
   names(densities) <- c("ID", "Estimates", "SE", "CoefVar")
-  
+
   # save shp - grid + data associated to cells
   densities$Estimates <- as.numeric(densities$Estimates)
   densities$CoefVar <- as.numeric(densities$CoefVar)
-  
+
   densities
 }
 
@@ -312,11 +312,11 @@ compareDensities <- function(model1, model2) {
 
 # generate distance models for all subsets
 generateDensityModel <- function(subsetIds, input, userInfo) {
-  
+
   loginfo("retrieving models")
   distanceData <- getDistanceData(subsetIds, userInfo)
   transects <- getTransects(distanceData)
-  
+
   gridSize <- input$densityGridSize
   if (is.empty(gridSize)) {
     gridSize <- DEFAULT_GRIDSIZE

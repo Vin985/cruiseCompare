@@ -1,11 +1,4 @@
 
-
-
-
-REPORT_OUTPUT_DIR <- DEST_DIR
-REPORT_FIGS_OUTPUT_DIR <- file.path(REPORT_OUTPUT_DIR, "figs")
-
-
 TYPE_COMPARE <- "compare"
 TYPE_CREATE <- "create"
 
@@ -39,20 +32,20 @@ generateReport <-
       DEFAULT_AUTHOR_NAME
     }
     today <- Sys.Date() #needed in markdown
-    
-    
+
+
     models <- generateDensityModel(subsetId, input, userInfo)
-    
+
     # If there is more than one to generate, suffix the subset id
     addSubsetId <-
       ifelse(length(input$subsetReport) > 1, paste0("_", subsetId), "")
-    
+
     # Gridsize for use in report
     gridSize <- isolate(input$gridSize)
     if (is.null(gridSize)) {
       gridSize <- DEFAULT_GRIDSIZE
     }
-    
+
     # Use the user provided name or the default one if it doesn't exists
     outputFile <- if (is.null(fileDest)) {
       fileName <- ifelse(is.empty(input$reportFileName),
@@ -62,17 +55,17 @@ generateReport <-
     } else {
       basename(fileDest)
     }
-    
-    
+
+
     # Data for use in report
     reportData <- list(models = models, gridSize = gridSize, subsets = subsetId)
-    
+
     outputDir <-
       ifelse(is.null(fileDest), REPORT_OUTPUT_DIR, dirname(fileDest))
-    
+
     loginfo("output File name: %s and dir: %s", outputFile, outputDir)
-    
-    
+
+
     rmarkdown::render(
       file.path(REPORTS_DIR, sprintf("cruise_report_%s.Rmd", userInfo$lang)),
       output_file = outputFile,
@@ -80,8 +73,8 @@ generateReport <-
       params = list(lang = userInfo$lang),
       encoding = "UTF-8"
     )
-    
-    
+
+
   }
 
 generateReports <-
@@ -97,22 +90,22 @@ generateCompareReport <- function(input, userInfo, fileDest = NULL) {
   } else {
     DEFAULT_AUTHOR_NAME
   }
-  
+
   sub1 <- input$selectCompareSubsetReport1
   sub2 <- input$selectCompareSubsetReport2
-  
+
   compareModel <- compareModels(c(sub1, sub2), input, userInfo)
-  
+
   # Gridsize for use in report
   gridSize <- isolate(input$gridSize)
   if (is.null(gridSize)) {
     gridSize <- DEFAULT_GRIDSIZE
   }
-  
+
   # Data for use in report
   reportData <- list(comparison = compareModel, gridSize = gridSize)
-  
-  
+
+
   # Use the user provided name or the default one if it doesn't exists
   outputFile <- if (is.null(fileDest)) {
     fileName <- ifelse(is.empty(input$reportFileName),
@@ -122,13 +115,13 @@ generateCompareReport <- function(input, userInfo, fileDest = NULL) {
   } else {
     basename(fileDest)
   }
-  
+
   outputDir <-
     ifelse(is.null(fileDest), REPORT_OUTPUT_DIR, dirname(fileDest))
-  
+
   loginfo("output File name: %s and dir: %s", outputFile, outputDir)
-  
-  
+
+
   rmarkdown::render(
     file.path(REPORTS_DIR, sprintf("compare_report_%s.Rmd", userInfo$lang)),
     output_file = outputFile,
@@ -136,7 +129,7 @@ generateCompareReport <- function(input, userInfo, fileDest = NULL) {
     params = list(lang = userInfo$lang),
     encoding = "UTF-8"
   )
-  
+
 }
 
 
@@ -193,19 +186,19 @@ generateReportDownloadObservers <-
 
 
 createReportObserver <- function(input, output, session, userInfo) {
-  
+
   observeEvent(input$showReportModal, {
     userInfo$reports <- NULL
     # Create observers to handle download
     generateReportDownloadObservers(input, output, userInfo)
     showModal(createReportModal(input, output, session, userInfo))
   })
-  
-  
+
+
   observeEvent(input$exitReportModal, {
     removeModal(session)
   })
-  
+
 }
 
 ##############
@@ -222,7 +215,7 @@ createReportRender <- function(input, output, session, userInfo) {
               uiOutput("compareReportOptions")
             })
   })
-  
+
   output$commonReportOptions <- renderUI({
     tagList(
       textInput(
@@ -236,15 +229,15 @@ createReportRender <- function(input, output, session, userInfo) {
         placeholder = geti18nValue("report.file.name.placeholder", userInfo$lang)
       ),
       fluidRow(column(10, div(class = "gridSize", style = "margin-bottom:20px;",
-                              numericInput("densityGridSize", 
-                                           label = geti18nValue("grid.size", userInfo$lang), 
+                              numericInput("densityGridSize",
+                                           label = geti18nValue("grid.size", userInfo$lang),
                                            value = DEFAULT_GRIDSIZE),
                               span("km")),
                       i18nTextOutput("warning.grid.size", userInfo$lang,
                                      style = "color: blue; font-size: 12px;")))
     )
   })
-  
+
   output$createReportOptions <- renderUI({
     loginfo("Displaying list of subsets...")
     isolate({
@@ -252,7 +245,7 @@ createReportRender <- function(input, output, session, userInfo) {
       subsets <- getSubsets(userInfo)
       subsetChoices <- names(subsets)
       names(subsetChoices) <- getSubsetsLabels(subsets)
-      
+
     })
     tagList(
       fluidRow(
@@ -293,9 +286,9 @@ createReportRender <- function(input, output, session, userInfo) {
                  )
                ))
     )
-    
+
   })
-  
+
   output$reportDownloadList <- renderUI({
     tagList(div(
       class = "downloadReportButtons",
@@ -311,7 +304,7 @@ createReportRender <- function(input, output, session, userInfo) {
       )
     ))
   })
-  
+
   output$reportActionButtons <- renderUI({
     div(style = "text-align: right; margin-top:20px;",
         actionButton(
@@ -319,7 +312,7 @@ createReportRender <- function(input, output, session, userInfo) {
           geti18nValue("button.exit", userInfo$lang)
         ))
   })
-  
+
   ## Download Handler for report comparison
   output$downloadCompareReport <-
     downloadHandler(
@@ -336,19 +329,19 @@ createReportRender <- function(input, output, session, userInfo) {
       # contentType = "application/pdf"
       contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
-  
-  
+
+
   output$compareReportOptions <- renderUI({
     # List all subsets
     subsets <- getSubsets(userInfo, isolate = FALSE)
     subsetChoices <- names(subsets)
     names(subsetChoices) <- getSubsetsLabels(subsets)
-    
+
     validate(need((length(subsetChoices) > 1),
                   geti18nValue("need.more.subsets", userInfo$lang)
     )
     , errorClass = "error")
-    
+
     tagList(
       fluidRow(
         class = "selectSubsetsCompareReport",
@@ -364,7 +357,7 @@ createReportRender <- function(input, output, session, userInfo) {
       )
     )
   })
-  
+
 }
 
 selectSubsetCompareReport <-
@@ -376,12 +369,12 @@ selectSubsetCompareReport <-
            report) {
     selectInputId <- paste0("selectCompareSubset", idx)
     infoOutputId <- paste0("subsetInfoCompare", idx)
-    
+
     ## Output
     output[[infoOutputId]] <- renderUI({
       div(displaySubsetInfo(input[[selectInputId]], userInfo))
     })
-    
+
     column(4,
            tagList(
              selectizeInput(

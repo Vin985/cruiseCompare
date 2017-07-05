@@ -1,21 +1,25 @@
 
 
-prepareData <- function(userInfo) {
+prepareData <- function(filterECSAS = FALSE, userInfo) {
   d <- isolate(userInfo$fullData)
   # Clean data
+  if (filterECSAS) {
+    d <- mcds.filter(d)
+  }
   d <- cleanDatabase(d)
   # Convert data to spatialDataframe
   spdata <- toSpatialDataframe(d, PROJ_AREA)
 
   # resize the whole shp to fit data
-  userInfo$landShp <- resizeShp(spdata)
+  userInfo$landShp <-  ALL_MAP_SHP#resizeShp(spdata)
   userInfo$fullData <- spdata
 }
 
 
 
-resizeShp <- function(spdata, shp, boundsBuffer, proj) {
+resizeShp <- function(spdata) {
   databox <- bbox(spdata)
+  # TODO: calculate buffer for projection. Ne marche pas avec la projection utilisee
   databox <- databox + SHP_BOUNDS_BUFFER
   newShp <- gIntersection(bbox2pol(databox, proj4string = PROJ_AREA), ALL_MAP_SHP, byid = T)
   newShp
@@ -51,9 +55,23 @@ cleanDatabase <- function(d) {
   d$Date <- as.character(d$Date)
   d$Date <- as.Date(d$Date, "%Y-%m-%d")
 
-  d$English <-
-    spname$English_Name[match(d$Alpha, spname$Species_ID)]
-  d$French <- spname$French_Name[match(d$Alpha, spname$Species_ID)]
+
+  idx <- match(d$Alpha, spname$Species_ID)
+  if (is.null(d$English)) {
+    d$English <- spname$English_Name[idx]
+  }
+  if (is.null(d$French)) {
+    d$French <- spname$French_Name[idx]
+  }
+
+  d$English <- as.character(d$English)
+  noEnglishNames <- which(!is.na(d$Alpha) & is.na(d$English))
+  d$English[noEnglishNames] <- d$Alpha[noEnglishNames]
+
+  d$French <- as.character(d$French)
+  noFrenchNames <- which(!is.na(d$Alpha) & is.na(d$French))
+  d$French[noFrenchNames] <- d$Alpha[noFrenchNames]
+
 
   d$English[is.na(d$English)] <- ""
   d$French[is.na(d$French)] <- ""

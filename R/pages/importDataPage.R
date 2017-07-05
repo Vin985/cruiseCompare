@@ -10,7 +10,8 @@ REQUIRED_COLUMNS <- list(
   col.count = "Count",
   col.distance = "Distance",
   col.effort = "WatchLenKm",
-  col.observer = "ObserverName",
+  col.observer.id = "ObserverID",
+  col.cruise.id = "CruiseID",
   col.transect.id = "WatchID",
   col.longitude = "LongStart",
   col.latitude = "LatStart",
@@ -43,7 +44,10 @@ importRData <- function(dataset) {
 }
 
 importCsvData <- function(input, userInfo) {
-  # TODO : import csv files
+  path <- input$csvDataFile
+  importedData <- fread(path$datapath)
+  return(importedData)
+  # TODO : test csv files
 }
 
 importData <- function(input, userInfo) {
@@ -102,7 +106,7 @@ matchColumns <- function(input, userInfo) {
 
 
   # If no errors rename columns, otherwise return errors
-  if (length(err) == 0) {
+  if (length(err) == 0 && !is.null(old) && !is.null(new)) {
     # rename fields from imported data to avoid problems later
     setnames(d, old, new)
     return(NULL)
@@ -146,8 +150,7 @@ importDataPage <- function(input, output, session, userInfo) {
   })
 
   observeEvent(input$selectFiltersAction, {
-    # TODO: species filter
-    prepareData(userInfo)
+    prepareData(input$filterECSAS, userInfo)
     selectDataFilters(input, output, session, userInfo)
     changePage(SELECTION_PAGE, userInfo)
   })
@@ -215,11 +218,12 @@ importDataPageUI <- function(input, output, userInfo) {
   })
 
   output$importDataOptions <- renderUI({
+    tagList(
     if (input$importDataType == IMPORT_TYPE_RDATA) {
       uiOutput("importDataRdata")
     } else {
       uiOutput("importDataCsv")
-    }
+    }, div(checkboxInput("filterECSAS", geti18nValue("filter.data.ecsas", userInfo$lang), value = FALSE)))
   })
 
   output$importDataRdata <- renderUI({
@@ -231,7 +235,7 @@ importDataPageUI <- function(input, output, userInfo) {
   })
 
   output$importDataCsv <- renderUI({
-    "test"
+    fileInput("csvDataFile", geti18nValue("import.csv.file", userInfo$lang))
   })
 
   output$importDataButton <- renderUI({
