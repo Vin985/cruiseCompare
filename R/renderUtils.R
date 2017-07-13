@@ -8,7 +8,8 @@ helpPopup <- function(title,
         "$(document).ready(function(){
         $('body').popover({
         selector: '[data-toggle=\"popover\"]',
-        trigger: 'focus'
+        trigger: 'focus',
+        container: 'body'
         });
         });"
     )
@@ -19,7 +20,7 @@ helpPopup <- function(title,
       role = "button",
       `data-toggle` = "popover",
       title = title,
-      `data-content` = content,
+      `data-content` = enc2utf8(content),
       `data-placement` = match.arg(placement, several.ok = TRUE)[1],
 
       # tags$i(class = "fainfo-circle")
@@ -28,23 +29,25 @@ helpPopup <- function(title,
     )
   }
 
-headerWithHelp <- function(filterName, userInfo) {
+headerWithHelp <- function(field, lang, useTitle = FALSE) {
+  title <- ifelse(useTitle, i18nText(paste0("help.title.", field), lang), "")
   tagList(
     h4(geti18nValue(
-      paste0("title.", filterName), userInfo$lang
+      paste0("title.", field), lang
     ), class = "filterHeader"),
     helpPopup(
-      geti18nValue(paste0("help.title.", filterName), userInfo$lang),
-      geti18nValue(paste0("help.content.", filterName), userInfo$lang)
+      title,
+      i18nText(paste0("help.content.", field), lang)
     )
   )
 }
 
-labelWithHelp <- function(field, lang, textclass= "") {
+labelWithHelp <- function(field, lang, textclass= "", useTitle = FALSE) {
+  title <- ifelse(useTitle, i18nText(paste0("help.title.", field), lang), "")
   tagList(
     i18nTextOutput(field, lang, inline = TRUE, class = textclass),
     helpPopup(
-      geti18nValue(paste0("help.title.", field), lang),
+      title,
       geti18nValue(paste0("help.content.", field), lang)
     )
   )

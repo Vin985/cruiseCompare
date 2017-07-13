@@ -198,7 +198,7 @@ selectSpeciesRender <- function(input, output, session, userInfo) {
   session$userData$useSpeciesNames <- FALSE
   ## Species title
   output$speciesTitle <- renderUI({
-    headerWithHelp(SPECIES_FILTER, userInfo)
+    headerWithHelp(SPECIES_FILTER, userInfo$lang)
   })
 
   ## Species selector

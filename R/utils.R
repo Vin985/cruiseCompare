@@ -1,5 +1,4 @@
 
-
 prepareData <- function(filterECSAS = FALSE, userInfo) {
   d <- isolate(userInfo$fullData)
   # Clean data
@@ -198,5 +197,51 @@ changePage <- function(page, userInfo) {
   userInfo$page <- page
   launchEvent(CHANGE_PAGE_EVENT, userInfo)
 }
+
+
+###########
+## UGLY UGLY HACK!!!!!
+## Need to make sure encoding is preserved while escaping
+## While waiting for a better way...
+##########
+
+newHtmlEscape <- local({
+
+  .htmlSpecials <- list(
+    `&` = '&amp;',
+    `<` = '&lt;',
+    `>` = '&gt;'
+  )
+  .htmlSpecialsPattern <- paste(names(.htmlSpecials), collapse='|')
+  .htmlSpecialsAttrib <- c(
+    .htmlSpecials,
+    `'` = '&#39;',
+    `"` = '&quot;',
+    `\r` = '&#13;',
+    `\n` = '&#10;'
+  )
+  .htmlSpecialsPatternAttrib <- paste(names(.htmlSpecialsAttrib), collapse='|')
+  function(text, attribute=FALSE) {
+    pattern <- if (attribute)
+      .htmlSpecialsPatternAttrib
+    else
+      .htmlSpecialsPattern
+    # Short circuit in the common case that there's nothing to escape
+    if (!any(grepl(pattern, text, useBytes = TRUE)))
+      return(text)
+    specials <- if (attribute)
+      .htmlSpecialsAttrib
+    else
+      .htmlSpecials
+    oldEncode <- Encoding(text)
+    for (chr in names(specials)) {
+      text <- gsub(chr, specials[[chr]], text, fixed = TRUE, useBytes = TRUE)
+    }
+    Encoding(text) <- oldEncode
+    return(text)
+  }
+})
+
+assignInNamespace("htmlEscape", newHtmlEscape, "htmltools")
 
 

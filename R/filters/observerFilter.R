@@ -278,7 +278,7 @@ selectObserverRender <- function(input, output, session, userInfo) {
 
   ## Observer title
   output$observerTitle <- renderUI({
-    headerWithHelp(OBSERVER_FILTER, userInfo)
+    headerWithHelp(OBSERVER_FILTER, userInfo$lang)
   })
 
   ## Select observerss

@@ -205,7 +205,7 @@ selectRegionRender <- function(input, output, session, userInfo) {
 
   ## Map title
   output$mapTitle <- renderUI({
-    headerWithHelp(REGION_FILTER, userInfo)
+    headerWithHelp(REGION_FILTER, userInfo$lang)
   })
 
   ## Map container

@@ -380,7 +380,7 @@ selectDateRender <- function(input, output, session, userInfo) {
 
   ## Date title
   output$dateTitle <- renderUI({
-    headerWithHelp(DATE_FILTER, userInfo)
+    headerWithHelp(DATE_FILTER, userInfo$lang)
   })
 
   ## Date UI

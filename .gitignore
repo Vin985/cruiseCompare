@@ -58,3 +58,4 @@ dest/figs
 assets/reports/*.md
 *.Rdata
 *.Rhistory
+ECSAS_filtered.csv
