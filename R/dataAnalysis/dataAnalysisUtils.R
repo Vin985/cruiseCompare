@@ -54,9 +54,11 @@ analyzeData <- function(data) {
 
   dt$Alpha[dt$Alpha == ""] <- NA
   dt$English[dt$English == ""] <- NA
+  dt$French[dt$French == ""] <- NA
 
   ##adapt species names
   dt$English <- as.factor(dt$English)
+  dt$French <- as.factor(dt$French)
   dt$Alpha <- as.factor(dt$Alpha)
 
   ### Total densities
@@ -74,13 +76,15 @@ analyzeData <- function(data) {
   birds <- dt[, .(
     Flocks = .N,
     Count = sum(Count, na.rm = T),
-    mean = mean(Count, na.rm = T),
+    meanFlock = round(mean(Count, na.rm = T), 1),
     sd = sd(Count, na.rm = T),
+    English = unique(English),
     French = unique(French)
-  ), by = English]
-  birds[, cv := sd / mean]
-  birds[, meanFlock := round(Count / Flocks, 1)]
+  ), by = Alpha]
+  birds[, cv := sd / meanFlock]
   # birds <- birds[!is.na(cv)]
+  birds <- birds[!is.na(English)]
+  setcolorder(birds, c("Alpha", "Flocks", "Count", "meanFlock", "sd", "cv", "English", "French"))
   setkey(birds, English)
 
   #descriptives

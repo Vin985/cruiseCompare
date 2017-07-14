@@ -3,8 +3,6 @@
 
 
 
-
-
 ## Page Id
 VIEW_DATA_PAGE <- "viewData"
 
@@ -19,11 +17,17 @@ DATA_ACTION_VIEW <- "view"
 DATA_ACTION_COMPARE <- "compare"
 
 ROUND_COLUMNS <- list(
-  birds = c("mean", "sd", "cv", "meanFlock"),
+  birds = c("sd", "cv", "meanFlock"),
   total = c("WatchLenKm", "Densities")
 )
 
-
+getDTcolnames <- function(dt, lang) {
+  cols <- colnames(dt)
+  res <-
+    unlist(lapply(cols, function(name, lang) {
+      geti18nValue(paste0("dt.col.", name), lang)
+    }, lang))
+}
 
 viewDataPage <- function(input, output, session, userInfo) {
   # Change Page
@@ -43,16 +47,21 @@ viewDataPage <- function(input, output, session, userInfo) {
                       userInfo,
                       as.df = TRUE,
                       isolate = FALSE)
+      cols <- colnames(dt)
     }
     else {
       dt <-
         getAnalyzedData(subsetId, userInfo, isolate = FALSE)[[input$dataType]]
+      cols <- getDTcolnames(dt, userInfo$lang)
     }
+
     DT::datatable(
       dt,
       filter = "top",
+      colnames = cols,
       extensions = c("Buttons", "ColReorder"),
       options = list(
+        sScrollX = "100%",
         orderClasses = TRUE,
         lengthMenu = c(10, 20, 50, 100),
         pageLength = 10,
@@ -73,10 +82,9 @@ viewDataUI <- function(input, output, session, userInfo) {
     tagList(column(
       12,
       fluidRow(column(8, uiOutput("subsetInfo")),
-               column(
-                 4, uiOutput(class = "dataAction",
-                             "selectDataAction")
-               )),
+               column(4, uiOutput(
+                 "selectDataAction"
+               ))),
       fluidRow(uiOutput("dataContent")),
       fluidRow(uiOutput("viewDataActionButtons"))
     ))
@@ -104,14 +112,18 @@ viewDataUI <- function(input, output, session, userInfo) {
           geti18nValue("data.compare", userInfo$lang)
         )
       tagList(
-        h5(geti18nValue(
-          "view.select.action", userInfo$lang
-        )),
-        radioButtons(
-          "dataAction",
-          label = NULL,
-          choices = actionType,
-          inline = TRUE
+        div(
+          style = "margin-bottom : 20px;",
+          labelWithHelp("view.select.action", userInfo$lang, textclass = "title2")
+        ),
+        div(
+          class = "dataAction",
+          radioButtons(
+            "dataAction",
+            label = NULL,
+            choices = actionType,
+            inline = TRUE
+          )
         )
       )
     }
@@ -172,14 +184,14 @@ viewDataUI <- function(input, output, session, userInfo) {
         geti18nValue("data.view.raw", userInfo$lang)
       )
     tagList(
-      h5(geti18nValue("view.data.dataset", userInfo$lang)),
+      labelWithHelp("view.data.dataset", userInfo$lang, textclass = "title2"),
       radioButtons(
         "dataType",
         label = geti18nValue("data.view.label", userInfo$lang),
         choices = dataType,
         inline = TRUE
       ),
-      dataTableOutput("dataTable", width = "90%")
+      dataTableOutput("dataTable")
     )
   })
 
@@ -206,10 +218,13 @@ viewDataUI <- function(input, output, session, userInfo) {
       subsetChoices <- names(subsets)
       names(subsetChoices) <- getSubsetsLabels(subsets)
     })
-    tagList(fluidRow(class = "selectSubsetsCompare",
-      selectSubsetCompare(1, subsetChoices, input, output, userInfo),
-      selectSubsetCompare(2, subsetChoices, input, output, userInfo)
-    ))
+    tagList(
+      fluidRow(
+        class = "selectSubsetsCompare",
+        selectSubsetCompare(1, subsetChoices, input, output, userInfo),
+        selectSubsetCompare(2, subsetChoices, input, output, userInfo)
+      )
+    )
   })
 
 
@@ -234,53 +249,61 @@ viewDataUI <- function(input, output, session, userInfo) {
 }
 
 
-selectSubsetCompare <- function(idx, subsetChoices, input, output, userInfo, reportId = NULL) {
-  selectInputId <- paste0("selectCompareSubset", reportId, idx)
-  infoOutputId <- paste0("subsetInfoCompare", reportId, idx)
+selectSubsetCompare <-
+  function(idx,
+           subsetChoices,
+           input,
+           output,
+           userInfo,
+           reportId = NULL) {
+    selectInputId <- paste0("selectCompareSubset", reportId, idx)
+    infoOutputId <- paste0("subsetInfoCompare", reportId, idx)
 
-  ## Output
-  output[[infoOutputId]] <- renderUI({
-    div(displaySubsetInfo(input[[selectInputId]], userInfo))
-  })
-  sel <- idx
-  columnSize <- 4
-  if (!is.null(reportId)) {
-    selection <- input[[paste0("selectCompareSubset", idx)]]
-    if (!is.empty(selection)) {
-      sel <- which(subsetChoices == selection)
+    ## Output
+    output[[infoOutputId]] <- renderUI({
+      div(displaySubsetInfo(input[[selectInputId]], userInfo))
+    })
+    sel <- idx
+    columnSize <- 4
+    if (!is.null(reportId)) {
+      selection <- input[[paste0("selectCompareSubset", idx)]]
+      if (!is.empty(selection)) {
+        sel <- which(subsetChoices == selection)
+      }
+      columnSize <- 6
     }
-    columnSize <- 6
-  }
 
-  column(columnSize,
-         tagList(
-           selectizeInput(
-             selectInputId,
-             geti18nValue(paste0("compare.choices.subset", idx), userInfo$lang),
-             choices = subsetChoices,
-             selected = subsetChoices[sel],
-             options = list(maxItems = 1)
-           ),
-           uiOutput(infoOutputId)
-         ))
-}
+    column(columnSize,
+           tagList(
+             selectizeInput(
+               selectInputId,
+               geti18nValue(paste0("compare.choices.subset", idx), userInfo$lang),
+               choices = subsetChoices,
+               selected = subsetChoices[sel],
+               options = list(maxItems = 1)
+             ),
+             uiOutput(infoOutputId)
+           ))
+  }
 
 displaySubsetInfo <- function(subsetId, userInfo) {
   # Take a dependency on subset data
   getSubsetData(subsetId, userInfo, isolate = FALSE)
   values <- getFilterValues(subsetId, userInfo)
-  tagList(h5(geti18nValue("subset.info", userInfo$lang)),
-          lapply(names(values), function(id) {
-            value <- values[id]
-            div(
-              textOutput2(
-                content = paste0(geti18nValue(paste0("filter.", id), userInfo$lang), ": "),
-                inline = TRUE
-              ),
-              textOutput2(
-                content = paste0(value, collapse = "; "),
-                inline = TRUE
-              )
-            )
-          }))
+  tagList(
+    labelWithHelp("subset.info", userInfo$lang, textclass = "title2"),
+    lapply(names(values), function(id) {
+      value <- values[id]
+      div(
+        textOutput2(
+          content = paste0(geti18nValue(paste0("filter.", id), userInfo$lang), ": "),
+          inline = TRUE
+        ),
+        textOutput2(
+          content = paste0(value, collapse = "; "),
+          inline = TRUE
+        )
+      )
+    })
+  )
 }

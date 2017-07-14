@@ -218,6 +218,7 @@ addSubsetModal <- function(userInfo) {
   loginfo("refresh modal")
   modalDialog(
     tagList(
+      labelWithHelp("subset.create", userInfo$lang, textclass = "h4"),
       textInput(
         "subsetLabel",
         geti18nValue("add.subset.label", userInfo$lang)

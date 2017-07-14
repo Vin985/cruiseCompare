@@ -1,5 +1,5 @@
 rm(list = ls())
-setwd("C:/dev/cruiseCompare/assets")
+setwd("C:/dev/EC/cruiseCompare/assets")
 
 library(ecapputils)
 
