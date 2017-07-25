@@ -1,21 +1,7 @@
 Modifications EC
 -----------------
 
-Ajout d'aide
-- Remplir aide
-- Ajout aide globale
-- ajout aide analyse donnees
-- ajout aide generation de rapport
-
-Importation des donnees
-- Observer/cruise Id: filtre a afficher si manquant?
-- selection des especes: langue
-- Verifier la presence des champs obligatoires
-- SMP_LABEL avec CruiseID
-- Supprimer le chargement automatique des donnees
-
-
-
+- Accepter langue
 
 General
 --------
@@ -46,10 +32,7 @@ Comparaison de rapports
 - Creation de rapport
 
 
-
-
 Bugs
 -----
 
 - Plantage si la combinaison de filtres aboutit a zero observation
-- changement subset : date pas mise a jour...

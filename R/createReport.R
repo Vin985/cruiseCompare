@@ -398,12 +398,17 @@ createReportModal <- function(input, output, session, userInfo) {
     )
   modalDialog(
     tagList(
+      div(
+        style = "margin-bottom : 20px;",
+        labelWithHelp("create.report", userInfo$lang, textclass = "title2")
+      ),
+      div(
       radioButtons(
         "reportType",
         label = geti18nValue("report.type.label", userInfo$lang),
         choices = reportType,
         inline = TRUE
-      ),
+      )),
       uiOutput("reportOptions"),
       uiOutput("reportActionButtons")
     ),

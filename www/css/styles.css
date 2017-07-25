@@ -29,6 +29,11 @@ div.outer {
 }
 
 
+.navButtons {
+  display: flex;
+  justify-content: space-around;
+}
+
 .filterHeader {
   display: inline-block;
 }

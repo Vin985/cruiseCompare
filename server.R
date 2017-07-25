@@ -1,11 +1,20 @@
 
+
 ## Files are loaded in global.R
 
 
 shinyServer(function(input, output, session) {
   logdebug("init")
 
-  userInfo <- reactiveValues(lang = "fr")
+  lang <- "fr"
+  query <-
+    parseQueryString(isolate(session$clientData$url_search))
+  lg <- query[["lang"]]
+  if (!is.null(lg) && lg %in% c("fr", "en")) {
+    lang <- lg
+  }
+
+  userInfo <- reactiveValues(lang = lang)
   userInfo$subsetCpt <- 1
   userInfo$page <- IMPORT_DATA_PAGE
   createSubset(userInfo)
@@ -23,9 +32,10 @@ shinyServer(function(input, output, session) {
     uiOutput(paste0(userInfo$page, "Page"))
   })
 
+
 })
 
-navbar <- function(input, output, session, userInfo){
+navbar <- function(input, output, session, userInfo) {
   changeSubsets(input, output, session, userInfo)
 
   ## handle language change
@@ -35,4 +45,9 @@ navbar <- function(input, output, session, userInfo){
     changeLanguageOutput(userInfo$lang, button = TRUE)
   })
 
+  ## go to application selection
+  applicationObserver("main", input, userInfo$lang)
+  output$goToMain <- renderUI({
+    applicationLink("main", userInfo$lang)
+  })
 }
