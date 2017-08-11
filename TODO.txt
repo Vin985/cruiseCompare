@@ -1,7 +1,13 @@
+Bugs
+-----
+
+- Annee non affichee detail subset
+- rapport : caracteres bizarres
+
 Modifications EC
 -----------------
 
-- Accepter langue
+- Timeout: ajouter les modifs de urgence et geoarvirweb
 
 General
 --------

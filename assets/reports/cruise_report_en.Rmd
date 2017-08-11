@@ -17,7 +17,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r,root, echo=FALSE,warning=FALSE,message=FALSE,cache=FALSE}
-library(ECSASconnect)
 library(R2MCDS)
 require(MASS)
 require(knitr)

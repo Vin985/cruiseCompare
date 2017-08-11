@@ -32,6 +32,12 @@ shinyServer(function(input, output, session) {
     uiOutput(paste0(userInfo$page, "Page"))
   })
 
+  ## Little hack to keep the connection alive on EC network
+  ## We refresh an empty box every 1:57mn to avoid disconnection
+  output$keepalive <- reactive({
+    invalidateLater(117000);
+    ""
+  })
 
 })
 
