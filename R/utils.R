@@ -1,10 +1,19 @@
 
 prepareData <- function(filterECSAS = FALSE, userInfo) {
+  out <- tryCatch({
   d <- isolate(userInfo$fullData)
-  # Clean data
-  if (filterECSAS) {
-    d <- mcds.filter(d)
+  # Should we convert distance class to meters: yes if there are characters
+  # in the column or if the filterECSAS option is checked
+  dist2m <- {
+  tryCatch({
+    as.numeric(as.character(d$Distance))
+    FALSE
+  }, warning = function(e){
+    print(e)
+    TRUE}) || filterECSAS
   }
+  # Clean data
+  d <- mcds.filter(d, dist2m = dist2m)
   d <- cleanDatabase(d)
   # Convert data to spatialDataframe
   spdata <- toSpatialDataframe(d, PROJ_AREA)
@@ -12,6 +21,11 @@ prepareData <- function(filterECSAS = FALSE, userInfo) {
   # resize the whole shp to fit data
   userInfo$landShp <-  ALL_MAP_SHP#resizeShp(spdata)
   userInfo$fullData <- spdata
+  }, error = function(e) {
+    print(e)
+    return(-1)
+  })
+  return(0)
 }
 
 
@@ -110,6 +124,7 @@ cleanDatabase <- function(d) {
   }
 
   d$Count <- as.numeric(d$Count)
+  d$Distance <- as.numeric(d$Distance)
 
   d
 }

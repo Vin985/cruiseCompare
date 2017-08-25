@@ -84,11 +84,8 @@ matchColumns <- function(input, userInfo) {
       if (is.empty(matchName)) {
         # if required, add error message
         if (expectedName %in% REQUIRED_COLUMNS) {
-          res$err <-
-            paste(
-              geti18nValue(names(columns)[idx], userInfo$lang),
-              geti18nValue("field.required", userInfo$lang)
-            )
+          colName <- geti18nValue(names(columns)[idx], userInfo$lang)
+          res$err <- i18nInsert("field.required", userInfo$lang, replace = c(colname = colName))
         }
       } else if (matchName != expectedName) {
         res$old <- matchName
@@ -150,9 +147,15 @@ importDataPage <- function(input, output, session, userInfo) {
   })
 
   observeEvent(input$selectFiltersAction, {
-    prepareData(input$filterECSAS, userInfo)
-    selectDataFilters(input, output, session, userInfo)
-    changePage(SELECTION_PAGE, userInfo)
+    res <- prepareData(input$filterECSAS, userInfo)
+    if (res == 0) {
+      selectDataFilters(input, output, session, userInfo)
+      changePage(SELECTION_PAGE, userInfo)
+    } else {
+      output$importError <- renderUI({
+        displayError("import.error")
+      })
+    }
   })
 
   observeEvent(input$matchColumnsAction, {
@@ -198,6 +201,7 @@ importDataPageUI <- function(input, output, userInfo) {
     tagList(h3(geti18nValue("import.data", userInfo$lang)),
             div(
               class = "well clearfix",
+              div(class = "description", i18nText("import.data.desc", userInfo$lang)),
               fluidRow(
                 class = "row-eq-height",
                 column(
@@ -256,6 +260,7 @@ importDataPageUI <- function(input, output, userInfo) {
         labelWithHelp("match.column.required", userInfo$lang, textclass = "h3"),
         div(
           class = "well clearfix",
+          div(class = "description", i18nText("match.columns.desc", userInfo$lang)),
           uiOutput("missingFields"),
           # required columns (for distance analysis)
           fluidRow(column(
@@ -290,6 +295,7 @@ importDataPageUI <- function(input, output, userInfo) {
       tagList(labelWithHelp("vizualize.data", userInfo$lang, textclass = "h3"),
                       div(
                         class = "well clearfix",
+                        div(class = "description", i18nText("vizualize.data.desc", userInfo$lang)),
                         uiOutput("viewOnMapButton"),
                         DT::dataTableOutput("vizDataTable")
                       ))
@@ -308,7 +314,9 @@ importDataPageUI <- function(input, output, userInfo) {
 
   output$selectFiltersButton <- renderUI({
     if (userInfo$columnsMatched) {
-      tagList(div(
+      tagList(
+        div(uiOutput("importError")),
+        div(
         class = "actionButtons",
         actionButton(
           class = "actionButton",
@@ -404,10 +412,12 @@ addActionButton <- function(id, label, userInfo) {
                    geti18nValue(label, userInfo$lang)))
 }
 
+displayError <- function(error) {
+  textOutput2(content = error, class = "error")
+}
+
 displayErrors <- function(errors) {
-  lapply(errors, function(err) {
-    textOutput2(content = err, class = "error")
-  })
+  lapply(errors, displayError)
 }
 
 viewOnMapModal <- function(input, output, session, userInfo) {

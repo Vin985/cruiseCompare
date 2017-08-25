@@ -24,9 +24,10 @@ selectionPage <- function(input, output, session, userInfo) {
 selectionPageUI <- function(input,output,userInfo) {
   output$selectionPage <- renderUI({
     print("selection")
-    tagList(fluidRow(
-      div(class = "chooseOptions",
-          uiOutput("subsetFilters"))),
+    tagList(
+      div(class = "description globalDesc", i18nText("filters.global.desc", userInfo$lang)),
+      fluidRow(class = "chooseOptions",
+          uiOutput("subsetFilters")),
       fluidRow(uiOutput("selectionActionButtons")))
   })
 

@@ -6,15 +6,16 @@
 shinyServer(function(input, output, session) {
   logdebug("init")
 
-  lang <- "fr"
-  query <-
-    parseQueryString(isolate(session$clientData$url_search))
-  lg <- query[["lang"]]
-  if (!is.null(lg) && lg %in% c("fr", "en")) {
-    lang <- lg
-  }
+  userInfo <- reactiveValues()
 
-  userInfo <- reactiveValues(lang = lang)
+  queryArgs <- getInfoFromQueryString(parseQueryString(isolate(session$clientData$url_search)), defaultLang = "fr")
+  if (!is.null(queryArgs)) {
+    lang <- queryArgs$lang
+    user <- queryArgs$user
+  }
+  userInfo$lang <- lang
+  userInfo$user <- user
+
   userInfo$subsetCpt <- 1
   userInfo$page <- IMPORT_DATA_PAGE
   createSubset(userInfo)
@@ -45,14 +46,13 @@ navbar <- function(input, output, session, userInfo) {
   changeSubsets(input, output, session, userInfo)
 
   ## handle language change
-  checkQueryLanguage(session, userInfo)
   changeLanguageHandler(input, userInfo, event = CHANGE_LANG_EVENT)
   output$changeLanguage <- renderUI({
     changeLanguageOutput(userInfo$lang, button = TRUE)
   })
 
   ## go to application selection
-  applicationObserver("main", input, userInfo$lang)
+  applicationObserver("main", input, userInfo$lang, userInfo$user)
   output$goToMain <- renderUI({
     applicationLink("main", userInfo$lang)
   })

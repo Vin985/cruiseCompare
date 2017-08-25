@@ -143,7 +143,7 @@ getConditionValues <- function(type, condition, ...) {
   if (exists(funcName)) {
     FUN <- get(funcName)
     return(FUN(cond, ...))
-  } else if (is.atomic(condition)) {
+  } else if (is.atomic(cond)) {
     return(paste0(cond, collapse = "; "))
   } else {
     ## For non atomic types (e.g: region selection)

@@ -6,10 +6,10 @@ shinyUI(fluidPage(
   includeCSS("www/css/styles.css"),
   fluidRow(
     class = "topRow",
-    column(10, uiOutput("subsetTabs")),
-    column(2, class = "navButtons",
+    column(9, uiOutput("subsetTabs")),
+    column(3, class = "navButtons",
            tagList(
-             #uiOutput("goToMain", style = "display:inl"),
+             uiOutput("goToMain", style = "display:inline-block"),
              uiOutput("changeLanguage")
            ))
   ),

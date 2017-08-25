@@ -10,6 +10,20 @@
   display:         flex;
 }
 
+.description {
+    margin-bottom: 20px;
+    color: #31708f;
+    background-color: #d9edf7;
+    padding: 5px 15px;
+    margin-bottom: 20px;
+    border: 1px solid #bce8f1;
+    border-radius: 4px;
+}
+
+.globalDesc {
+  margin-top: 15px;
+}
+
 input[type="number"] {
   max-width: 60%;
 }
