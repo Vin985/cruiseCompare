@@ -40,8 +40,12 @@ resizeShp <- function(spdata) {
 
 
 ## Get the full dataset from reactive values
-getFullData <- function(userInfo, as.df = FALSE) {
-  fullData <- isolate(userInfo$fullData)
+getFullData <- function(userInfo, as.df = FALSE, isolate = TRUE) {
+  fullData <- if (isolate) {
+    isolate(userInfo$fullData)
+  } else {
+    userInfo$fullData
+  }
   if (!is.null(fullData) && as.df) {
     fullData@data
   } else {

@@ -16,10 +16,7 @@ shinyServer(function(input, output, session) {
   userInfo$lang <- lang
   userInfo$user <- user
 
-  userInfo$subsetCpt <- 1
   userInfo$page <- IMPORT_DATA_PAGE
-  createSubset(userInfo)
-
 
   navbar(input, output, session, userInfo)
 
@@ -27,6 +24,12 @@ shinyServer(function(input, output, session) {
   selectionPage(input, output, session, userInfo)
   viewDataPage(input, output, session, userInfo)
 
+
+  ## Event observers for the selectors
+  selectDataFiltersObservers(input, output, session, userInfo)
+  ## Render filters
+  selectDataFiltersRender(input, output, session, userInfo)
+  initializeFilters(FILTER_LIST, input, output, session, userInfo)
 
   output$pageContent <- renderUI({
     loginfo("page selection %s", userInfo$page)

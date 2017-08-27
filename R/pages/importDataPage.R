@@ -144,17 +144,26 @@ importDataPage <- function(input, output, session, userInfo) {
   observeEvent(input$importDataAction, {
     userInfo$fullData <- importData(input, userInfo)
     userInfo$columnsMatched <- FALSE
+    userInfo$imported <- TRUE
   })
 
   observeEvent(input$selectFiltersAction, {
-    res <- prepareData(input$filterECSAS, userInfo)
-    if (res == 0) {
-      selectDataFilters(input, output, session, userInfo)
+    # if already imported data but no change, do not reprepare data and keep filters
+    if (!isolate(userInfo$imported)) {
       changePage(SELECTION_PAGE, userInfo)
     } else {
-      output$importError <- renderUI({
-        displayError("import.error")
-      })
+      res <- prepareData(input$filterECSAS, userInfo)
+      if (res == 0) {
+        #initialize subsets
+        initSubset(userInfo)
+        changePage(SELECTION_PAGE, userInfo)
+        selectDataFilters(input, output, session, userInfo)
+        launchEvent(IMPORT_DATA_EVENT, userInfo)
+      } else {
+        output$importError <- renderUI({
+          displayError("import.error")
+        })
+      }
     }
   })
 

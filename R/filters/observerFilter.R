@@ -161,11 +161,13 @@ observerFilterEventHandler <-
     if (event$type == CHANGE_LANG_EVENT) {
       loginfo("changing language")
       updateChoices <- FALSE
-    } else if (event$type == SUBSET_DATA_EVENT) {
-      loginfo("subsetting Data")
+    } else if (event$type == SUBSET_DATA_EVENT || event$type == IMPORT_DATA_EVENT) {
+      loginfo("subsetting data")
       setObserverList(userInfo)
     }
-    updateObserverInput(session, userInfo, updateChoices = updateChoices)
+    if (!(event$type == CHANGE_PAGE_EVENT && userInfo$page != SELECTION_PAGE)) {
+      updateObserverInput(session, userInfo, updateChoices = updateChoices)
+    }
   }
 
 ## Update the cruises list
@@ -274,7 +276,6 @@ selectObserverObserver <-
 
 ## Main render function for observer selection. All UI render function are here
 selectObserverRender <- function(input, output, session, userInfo) {
-  cruiseData <- isolate(setObserverList(userInfo))
 
   ## Observer title
   output$observerTitle <- renderUI({
@@ -290,7 +291,7 @@ selectObserverRender <- function(input, output, session, userInfo) {
             selectizeInput(
               "observer",
               label = geti18nValue("select.observers", userInfo$lang),
-              choices = c("", unique(cruiseData$ObserverName)),
+              choices = c("", unique(getObserverList(userInfo)$ObserverName)),
               selected = "",
               multiple = FALSE,
               options = list(placeholder = geti18nValue("select.all", userInfo$lang))
@@ -306,7 +307,7 @@ selectObserverRender <- function(input, output, session, userInfo) {
       selectizeInput(
         "cruises",
         label = geti18nValue("select.cruises", userInfo$lang),
-        choices = c("", unique(cruiseData$CruiseID)),
+        choices = c("", unique(getObserverList(userInfo)$CruiseID)),
         multiple = TRUE,
         options = list(
           plugins = list("remove_button"),

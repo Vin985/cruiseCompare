@@ -104,14 +104,17 @@ addRegionFilter <- function(selections, userInfo) {
 regionFilterEventHandler <-
   function(input, output, session, userInfo) {
     event <- isolate(userInfo$event)
-    if (event$type == CHANGE_PAGE_EVENT &&
+    if (event$type == IMPORT_DATA_EVENT) {
+      map <- leafletProxy("regionMap", deferUntilFlush = TRUE)
+      clearGroup(map, "observations")
+      clearLayerGroup(map, "draw")
+      userInfo$redrawMap <- userInfo$redrawMap + 1
+    } else if (event$type == CHANGE_PAGE_EVENT &&
         userInfo$page == SELECTION_PAGE) {
       userInfo$redrawMap <- userInfo$redrawMap + 1
-    }
-    if (event$type == CHANGE_LANG_EVENT ||
+    } else if (event$type == CHANGE_LANG_EVENT ||
         (event$type == CHANGE_PAGE_EVENT) ||
         userInfo$page != SELECTION_PAGE) {
-      #&& userInfo$page != SELECTION_PAGE)) {
       return()
     }
 
@@ -183,7 +186,7 @@ selectRegionObserver <- function(input, output, session, userInfo) {
   observeEvent(input$regionMap_draw_all_features, {
     selections <- input$regionMap_draw_all_features$features
     addRegionFilter(selections, userInfo)
-  })
+  }, ignoreInit = TRUE)
 
 }
 

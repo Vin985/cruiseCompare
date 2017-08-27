@@ -120,6 +120,7 @@ CHANGE_LANG_EVENT <- "EVENT_changeLang"
 CHANGE_PAGE_EVENT <- "EVENT_changePage"
 CHANGE_SUBSET_EVENT <- "EVENT_changeSubset"
 SUBSET_DATA_EVENT <- "EVENT_subsetData"
+IMPORT_DATA_EVENT <- "EVENT_importData"
 
 
 ## Load Language file

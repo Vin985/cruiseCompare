@@ -67,6 +67,13 @@ createSubset <- function(userInfo, label = NULL) {
   return(subsetId)
 }
 
+initSubset <- function(userInfo) {
+  userInfo$subsets <- NULL
+  userInfo$subsetData <- NULL
+  userInfo$subsetCpt <- 1
+  createSubset(userInfo)
+}
+
 
 ######################
 ### UserInfo Utils

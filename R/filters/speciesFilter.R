@@ -14,7 +14,7 @@ SPECIES_COLUMNS <- c(col.species.english = "English",
 ##################
 
 canUseSpeciesFilter <- function(userInfo) {
-  d <- getFullData(userInfo, as.df = TRUE)
+  d <- getFullData(userInfo, as.df = TRUE, isolate = FALSE)
   if (any(!SPECIES_COLUMNS %in% names(d))) {
     return(FALSE)
   }
@@ -97,7 +97,11 @@ addSpeciesFilter <- function(selections, userInfo) {
 
 speciesFilterEventHandler <- function(input, output, session, userInfo) {
   event <- isolate(userInfo$event)
-  if (event$type == CHANGE_LANG_EVENT || event$type == CHANGE_PAGE_EVENT){
+  if (event$type == IMPORT_DATA_EVENT) {
+    ##Isolate species names and codes
+    userInfo$species <-
+      isolate(distinct(dplyr::select(getFullData(userInfo, as.df = TRUE), Alpha, English, French, Latin)))
+  } else if (event$type == CHANGE_LANG_EVENT || event$type == CHANGE_PAGE_EVENT) {
     ## Update checkbox label
     updateCheckboxInput(session,
                         "useNames",
@@ -168,10 +172,6 @@ updateSpeciesInput <- function(input, session, userInfo) {
 ## Main observer function for species selection. All observers are defined here
 selectSpeciesObserver <-
   function(input, output, session, userInfo) {
-    ##Isolate species names and codes
-    userInfo$species <-
-      isolate(distinct(dplyr::select(getFullData(userInfo, as.df = TRUE), Alpha, English, French, Latin)))
-
 
     ## Update choices list if names are selected
     observeEvent(input$useNames, {
@@ -203,27 +203,29 @@ selectSpeciesRender <- function(input, output, session, userInfo) {
 
   ## Species selector
   output$selectSpecies <- renderUI({
-    isolate({
-      div(class = "selector selectSpecies",
-          uiOutput("speciesTitle"),
-          tagList(
-            checkboxInput(
-              "useNames",
-              label = geti18nValue("species.use.common.name", userInfo$lang),
-              value = session$userData$useSpeciesNames
-            ),
-            selectizeInput(
-              "speciesFilter",
-              label = geti18nValue("select.species", userInfo$lang),
-              choices = NULL,
-              multiple = TRUE,
-              options = list(
-                plugins = list("remove_button"),
-                placeholder = geti18nValue("select.all", userInfo$lang)
+    if (canUseSpeciesFilter(userInfo)) {
+      isolate({
+        div(class = "selector selectSpecies",
+            uiOutput("speciesTitle"),
+            tagList(
+              checkboxInput(
+                "useNames",
+                label = geti18nValue("species.use.common.name", userInfo$lang),
+                value = session$userData$useSpeciesNames
+              ),
+              selectizeInput(
+                "speciesFilter",
+                label = geti18nValue("select.species", userInfo$lang),
+                choices = NULL,
+                multiple = TRUE,
+                options = list(
+                  plugins = list("remove_button"),
+                  placeholder = geti18nValue("select.all", userInfo$lang)
+                )
               )
             )
           )
-        )
-    })
+       })
+    }
   })
 }

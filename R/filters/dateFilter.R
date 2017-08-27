@@ -119,7 +119,7 @@ addDateFilter <- function(selections, type, userInfo) {
 
 dateFilterEventHandler <- function(input, output, session, userInfo) {
   event <- isolate(userInfo$event)
-  if (event$type == SUBSET_DATA_EVENT) {
+  if (event$type == SUBSET_DATA_EVENT || event$type == IMPORT_DATA_EVENT) {
     logdebug("update date subset")
     setDateData(userInfo)
   }
@@ -310,30 +310,27 @@ setDateData <- function(userInfo) {
 ## Main render function for date selection. All UI render function are here
 selectDateRender <- function(input, output, session, userInfo) {
 
-  dateInfo <- isolate(setDateData(userInfo))
 
   selectDateBy <- list(TYPE_YEARS, TYPE_RANGE)
   months <- 1:12
 
-
   output$dateRangeSelect <- renderUI({
+    bounds <- getDateRangeBounds(userInfo)
     isolate({
-      min <- dateInfo$min
-      max <- dateInfo$max
       dateRangeInput(
         "dateRange",
         label = geti18nValue("select.date.range", userInfo$lang),
-        start = min,
-        end = max,
-        min = min,
-        max = max
+        start = bounds$min,
+        end = bounds$max,
+        min = bounds$min,
+        max = bounds$max
       )
     })
   })
 
   output$dateYearsSelect <- renderUI({
     isolate({
-      years <- dateInfo$years
+      years <- getDateYears(userInfo)
       selectizeInput(
         "dateYears",
         label = geti18nValue("select.date.years", userInfo$lang),
