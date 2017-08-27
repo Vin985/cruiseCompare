@@ -62,11 +62,13 @@
 "filter.date.months";"Mois";"Months"
 "filter.date.range";"Période";"Date range"
 "filter.date.years";"Années";"Years"
+"filter.none";"Aucun filtre sélectionné";"No filter selected"
 "filter.observer.cruises";"Croisières";"Cruises"
 "filter.observer.observer";"Observateur";"Observer"
 "filter.region.region";"Région";"Region"
 "filter.species.species";"Espèces";"Species"
 "filters.global.desc";"Sur cette page, vous avez la possibilité de générer différentes sélections de données à partir de divers critères. Vous pourrez par la suite créer un rapport pour chacune des sélections ou encore comparer deux sélections et générer le rapport subséquent. Pour créer une nouvelle sélection, il suffit de cliquer sur le bouton <b>""+""</b> sur le bandeau ci-dessus. <br/><br/> Le bouton <b>""Sélectionnez les données""</b> ci-dessous permet d'appliquer les filtres choisis et restreint le jeu de données, modifiant ainsi les choix disponibles pour chaque filtre. Ceci peut être utile pour réduire les choix disponibles par année ou par zone d'étude par exemple.<br/><br/> Une fois vos sélections terminées, cliquez sur <b>""Voir les données""</b> afin d'avoir un résumé des données et de pouvoir générer les rapports et comparer deux sélections.";"On this page, you can create subsets from different filters. You will then be able to generate a report for each subset or to compare two subsets together and then generate the report for this comparison. To add a subset, just click on the <b>""+""</b> in the header above.<br/><br/> The button<b>""Subset data""</b> below apply the selected filters and subset the dataset, changing the available choices for each filter. This can be useful to reduce the available choice for a given year or a specific geographic zone for example.<br/><br/> Once all your subsets are done, click on <b>""View data""</b> to see a summary of the selected data, generate reports and compare subsets."
+"generating.density.models";"Génération des modèles de densité";"Generating density models"
 "grid.size";"Taille des cellules de grille:";"Mesh size:"
 "help.content.col.count";"Nombre d'individus observés. Devrait être numérique. Obligatoire";"Number of individuals observed. Should be numeric. Required"
 "help.content.col.cruise.end";"Facultatif. Uniquement utilisé à des fin informatives lors de la création de rapport";"Facultative. Only used to provide more information while creating reports"
@@ -92,7 +94,7 @@
 "help.content.region";"Permet de sélectionner une zone géographique précise pour filter les données. Deux types de sélection sont possible: soit en créant un polygone à la main (icône de gauche) soit en dessinant simplement un rectangle (icône plus à droite). Il est possible de faire plus d'une sélection à la fois et de les modifier ou de les supprimer en utilisant les icônes d'édition à droite";"Filter data by geographic location. Two types of selection are possible: by drawing a polygon (icon on the complete left) or a rectangle (icon beside it on the right). More than one selection can be made and selection can then be edited or deleted using the editing icons on the right"
 "help.content.species";"Permet de choisir les espèces voulues. L'option ""Utiliser le nom commun"" est uniquement utilisée pour une meilleure lisibilité. Si l'option est sélectionnée mais que seulement le code de l'espèce s'affiche, assurez vous que les colonnes contenant les noms en français et en anglais ont bien été sélectionnées lors de l'import des données";"Filter data by species. The option ""Use common name"" is used only for an improved readability. If the option is checked but only the species code is displayed, please make sure the columns containing the english and french names have been correctly selected during data import"
 "help.content.subset.create";"Cette section permet de créer une nouvelle sélection. La sélection peut être vide ou des filtres provenant d'une sélection existante peuvent être réutilisés. Deux sélections peuvent ensuite être comparées";"This section creates a new subset. The new subset can be empty or use filters already defined in another subset. Two subsets can then be compared afterwards"
-"help.content.subset.info";"Information sur les filtres sélectionnés";"Information on selected filters"
+"help.content.subset.info";"Affiche les filtres sélectionnés";"Display the selected filters"
 "help.content.view.data.dataset";"Visualisation des données. Trois choix sont disponibles: 
 des informations agrégées par séance d'observation, des statistiques par espèce ou groupe d'oiseau et les données brutes";"Data vizualization. Three options are available: statistics by observation watch, statistics by bird species or raw data"
 "help.content.view.select.action";"Deux actions sont possibles: voir les données de la sélections actuelle sous forme de tableau ou de carte de densité ou alors comparer deux sélections de données";"Two actions are possible: view data from the current subset as tables or density map or compare two data subsets"
@@ -169,6 +171,20 @@ des informations agrégées par séance d'observation, des statistiques par esp�
 "use.subset.filter";"Utiliser les filtres d'une sélection existante";"Use filters from an existing subset"
 "view.data";"Voir les données";"View data"
 "view.data.dataset";"Visualisation des données";"Data vizualisation"
+"view.data.desc";"Page de visualisation des données. Sur cette page, les options suivantes s'offrent à vous:
+<ul>
+<li>Visualiser les données sous forme de tableau</li>
+<li>Visualiser la carte de densité des données sélectionnées</li>
+</ul>
+Si plus d'une sélection de données a été créée, deux nouveaux boutons apparaîtront pour soit visualiser les données une sélection à la fois, soit pour comparer deux sélections entre elles.
+Pour visualiser une nouvelle sélection, choisissez la sélection désirée dans le bandeau ci-dessus.<br/><br/>
+Vous pouvez ensuite créer un rapport compilant ces informations en cliquant sur <b>""Créer un rapport""</b>";"Data vizualisation page. On this page, you can do the following:
+<ul>
+<li>View data in table form</li>
+<li>View the density map of the selected subset</li>
+</ul>
+If more than one subset was created, two new buttons will appear and give you the option to either view data one subset at a time or compare two subsets togther. To change the subset to visualize, just click on the desired subset in the header above.<br/><br/>
+You can then create a report summarizing the information by clicking on <b>""Create a report""</b>"
 "view.on.map";"Voir sur la carte";"View on map"
 "view.select.action";"Actions possibles";"Possible actions"
 "visited.cells.legend";"Cellules visitées

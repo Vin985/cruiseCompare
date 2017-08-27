@@ -11,17 +11,21 @@
 }
 
 .description {
-    margin-bottom: 20px;
     color: #31708f;
     background-color: #d9edf7;
     padding: 5px 15px;
-    margin-bottom: 20px;
     border: 1px solid #bce8f1;
     border-radius: 4px;
+    margin-bottom: 20px;
 }
 
 .globalDesc {
   margin-top: 15px;
+}
+
+.viewDataDesc {
+  margin-top: 15px;
+  margin-bottom: 10px;
 }
 
 input[type="number"] {
@@ -355,9 +359,11 @@ h1, h2, h3, h4 { font-weight: 400; }
   margin-right: 32%;
   /*margin-left: 12%;*/
   margin-top: 4%;
-  padding: 5px 100px 35px 120px;
-  opacity: 0.8;
+  padding: 10px 30px;
+  opacity: 1;
+  border-radius:4px;
   font-size: 18px;
+  height: auto;
 }
 
 

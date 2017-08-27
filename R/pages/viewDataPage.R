@@ -81,7 +81,8 @@ viewDataUI <- function(input, output, session, userInfo) {
   output$viewDataPage <- renderUI({
     tagList(column(
       12,
-      fluidRow(column(8, uiOutput("subsetInfo")),
+      div(class = "description viewDataDesc", i18nText("view.data.desc", userInfo$lang)),
+      fluidRow(column(8, uiOutput("subsetInfo", style = "margin-bottom: 15px;")),
                column(4, uiOutput(
                  "selectDataAction"
                ))),
@@ -292,18 +293,23 @@ displaySubsetInfo <- function(subsetId, userInfo) {
   values <- getFilterValues(subsetId, userInfo)
   tagList(
     labelWithHelp("subset.info", userInfo$lang, textclass = "title2"),
-    lapply(names(values), function(id) {
-      value <- values[id]
-      div(
-        textOutput2(
-          content = paste0(geti18nValue(paste0("filter.", id), userInfo$lang), ": "),
-          inline = TRUE
-        ),
-        textOutput2(
-          content = paste0(value, collapse = "; "),
-          inline = TRUE
+    if (is.empty(values)) {
+      textOutput2(content = geti18nValue("filter.none", userInfo$lang), inline = FALSE)
+    } else {
+      lapply(names(values), function(id) {
+        value <- values[id]
+        div(
+          textOutput2(
+            content = paste0(geti18nValue(paste0("filter.", id), userInfo$lang), ": "),
+            inline = TRUE
+          ),
+          textOutput2(
+            content = paste0(value, collapse = "; "),
+            inline = TRUE
+          )
         )
-      )
-    })
+      })
+    }
+
   )
 }

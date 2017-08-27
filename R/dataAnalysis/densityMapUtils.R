@@ -93,21 +93,23 @@ mapDensitiesToGrid <- function(densities, grid) {
   estimates <- grid$Estimates[!is.na(grid$Estimates)]
   unvisited <- grid[is.na(grid$Estimates),]
 
-  breaks <- getBreaks(densities, max(grid$Estimates, na.rm = TRUE))
-  # Find in which interval estimates are. Add 1 because 0 is an interval in itself
-  grid$classno <- findInterval(grid$Estimates, breaks)
-  # If no negative breaks, add 0 as a specific class
-  if (!any(breaks < 0)) {
-    grid$classno <- grid$classno + 1
-    grid$classno[grid$Estimates == 0] <- 1
+  breaks <- NULL
+  if (length(estimates > 0)) {
+    breaks <- getBreaks(densities, max(grid$Estimates, na.rm = TRUE))
+    # Find in which interval estimates are. Add 1 because 0 is an interval in itself
+    grid$classno <- findInterval(grid$Estimates, breaks)
+    # If no negative breaks, add 0 as a specific class
+    if (!any(breaks < 0)) {
+      grid$classno <- grid$classno + 1
+      grid$classno[grid$Estimates == 0] <- 1
+    }
+    tags <- getBreakTags(breaks)
+    grid$class <- tags[grid$classno]
+
+    grid <- grid[order(grid$classno),]
+
+    grid$abundance <- grid$km2 * grid$Estimates
   }
-  tags <- getBreakTags(breaks)
-  grid$class <- tags[grid$classno]
-
-  grid <- grid[order(grid$classno),]
-
-  grid$abundance <- grid$km2 * grid$Estimates
-
   return(list(
     breaks = breaks,
     grid = grid,
@@ -171,11 +173,6 @@ plotDensityMap <-
       grid <- grid[!is.na(grid$Estimates), ]
     }
 
-    # Cells never visites
-    # never <- unvisited[is.na(unvisited$Estimates.x) & is.na(unvisited$Estimates.y), ]
-    palette <- getPaletteColors(breaks)
-    classes <- unique(grid$class[!is.na(grid$class)])
-
     args <- list(...)
     legendTitle <-
       ifelse(is.null(args$legendTitle), geti18nValue("birds.density.legend", lang), args$legendTitle)
@@ -192,30 +189,39 @@ plotDensityMap <-
     }
 
 
+
+
+
     bounds <- bbox(grid)
+    xlegend <- "bottomright"
+    ylegend <- NULL
     plot(
       grid,
       bg = hcl(240, 50, 66),
       cex.axis = 1.5,
       xlim = bounds[1,] * 1.5
     )
-    grid2 <- grid[!is.na(grid$class),]
-    for (class in classes) {
-      tmp <- grid2[grid2$class == class,]
-      plot(tmp,
-           col = palette[tmp$classno],
-           border = "black",
-           add = T)
-    }
-    l <- legend(
-      "bottomright",
-      bty = "n",
-      legend = getBreakTags(breaks),
-      fill = palette,
-      title = legendTitle,
-      cex = legendCex
-    )
+    if (!is.null(breaks)) {
+      palette <- getPaletteColors(breaks)
+      classes <- unique(grid$class[!is.na(grid$class)])
 
+      grid2 <- grid[!is.na(grid$class),]
+      for (class in classes) {
+        tmp <- grid2[grid2$class == class,]
+        plot(tmp,
+             col = palette[tmp$classno],
+             border = "black",
+             add = T)
+      }
+      leg <- legend(
+        xlegend,
+        bty = "n",
+        legend = getBreakTags(breaks),
+        fill = palette,
+        title = legendTitle,
+        cex = legendCex
+      )
+    }
     ## Comparison only: transects visited in one subset but not the other
     if (!is.null(sub1) && !is.null(sub2)) {
       plot(sub1,
@@ -233,10 +239,13 @@ plotDensityMap <-
                    legend = subsetNames,
                    title = geti18nValue("visited.cells.legend", lang),
                    cex = legendCex)
-
+      if (exists("leg")) {
+        xlegend <- leg$rect$left - (tl$rect$w * 1.05 - leg$rect$w)
+        ylegend <- leg$rect$top + tl$rect$h * 1.05
+      }
       legend(
-        x = l$rect$left - (tl$rect$w * 1.05 - l$rect$w),
-        y = l$rect$top + tl$rect$h * 1.05,
+        x = xlegend,
+        y = ylegend,
         #coords, #"right",
         bty = "n",
         legend = subsetNames,
@@ -307,7 +316,7 @@ plotDensityMap <-
     axis(1, at = as.numeric(names(xt)), labels = xticks, cex.axis = 1.5)
     axis(2, at = as.numeric(names(yt)), labels = yticks, cex.axis = 1.5)
 
-    return(grid2)
+    return(grid)
 
   }
 
