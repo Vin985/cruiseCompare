@@ -2,6 +2,7 @@
 ## Page Id
 SELECTION_PAGE <- "selection"
 
+
 selectionPage <- function(input, output, session, userInfo) {
 
   # selectDataFilters(input, output, session, userInfo)
@@ -12,10 +13,18 @@ selectionPage <- function(input, output, session, userInfo) {
 
   observeEvent(input$viewDataAction, {
     filterSubsets(userInfo)
-    # reset all distance analysis
-    userInfo$distance <- NULL
-    changePage(VIEW_DATA_PAGE, userInfo)
+
+    isEmpty <- checkEmptySubsetData(userInfo)
+
+    if (!isEmpty) {
+      # reset all distance analysis
+      userInfo$distance <- NULL
+      changePage(VIEW_DATA_PAGE, userInfo)
+    }
+
   })
+
+
 
   observeEvent(input$importDataPageAction, {
     changePage(IMPORT_DATA_PAGE, userInfo)
@@ -24,14 +33,23 @@ selectionPage <- function(input, output, session, userInfo) {
 
 }
 
-selectionPageUI <- function(input,output,userInfo) {
+selectionPageUI <- function(input, output, userInfo) {
+
+  output$subsetError <- renderUI({
+    displayErrors(userInfo$subsetErrors)
+  })
+
   output$selectionPage <- renderUI({
     print("selection")
     tagList(
       div(class = "description globalDesc", i18nText("filters.global.desc", userInfo$lang)),
       fluidRow(class = "chooseOptions",
-          uiOutput("subsetFilters")),
-      fluidRow(uiOutput("selectionActionButtons")))
+               uiOutput("subsetFilters")),
+      fluidRow(column(12, tagList(
+        uiOutput("subsetError", style = "margin-top: 20px"),
+        uiOutput("selectionActionButtons")
+      )))
+    )
   })
 
   output$selectionActionButtons <- renderUI({

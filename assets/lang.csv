@@ -161,6 +161,7 @@ des informations agrégées par séance d'observation, des statistiques par esp�
 "species.use.common.name";"Utiliser le nom commun";"Use common name"
 "subset.cancel";"Annuler";"Cancel"
 "subset.create";"Créer une nouvelle sélection";"Add a new subset"
+"subset.data.empty";"Erreur: aucune donnée trouvée pour la combinaison de filtres de la sélection %subsetid%";"Error: no data found for the filters of subset %subsetid%"
 "subset.info";"Filtres sélectionnés";"Selected filter"
 "text.or";"ou";"or"
 "title.date";"Date";"Date"

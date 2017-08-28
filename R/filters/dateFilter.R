@@ -181,6 +181,9 @@ updateDateChoices <-
       )
     } else {
       selectedYears <- filters$years
+      if (is.null(selectedYears)) {
+        selectedYears <- ""
+      }
       updateSelectizeInput(
         session,
         "dateYears",
@@ -197,6 +200,9 @@ updateDateChoices <-
     ## Update months input
     if (restrictDate) {
       selectedMonths <- filters$months
+      if (is.null(selectedMonths)) {
+        selectedYears <- ""
+      }
       updateSelectizeInput(
         session,
         "dateMonths",

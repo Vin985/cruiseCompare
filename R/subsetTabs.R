@@ -23,16 +23,19 @@ changeSubsets <- function(input, output, session, userInfo) {
 
 createSubsetLinkObserver <- function(subset, input, userInfo) {
   linkId <- paste0(subset, "Link")
-  observeEvent(input[[linkId]], {
-    setCurrentSubset(subset, userInfo)
-    launchEvent(CHANGE_SUBSET_EVENT, userInfo)
+  obs <- observeEvent(input[[linkId]], {
+    if (subset != userInfo$currentSubset) {
+      setCurrentSubset(subset, userInfo)
+      launchEvent(CHANGE_SUBSET_EVENT, userInfo)
+    }
   })
+  setSubsetObserver(subset, obs, userInfo)
 }
 
 
 generateSubsetsObservers <- function(input, session, userInfo) {
   subsets <- names(getSubsets(userInfo))
-  lapply(subsets, createSubsetLinkObserver, input, userInfo)
+  r <- lapply(subsets, createSubsetLinkObserver, input, userInfo)
 }
 
 
@@ -86,8 +89,9 @@ addNewSubset <- function(input, output, userInfo) {
 
 changeSubsetsObserver <-
   function(input, output, session, userInfo) {
-    ## Generate observers for subset links
-    generateSubsetsObservers(input, session, userInfo)
+    ## Generate observers for subset1 as it will always exist
+
+     # generateSubsetsObservers(input, session, userInfo)
 
     ## User want to add a subset, display the form
     observeEvent(input$addSubset, {

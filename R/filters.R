@@ -20,6 +20,7 @@ selectDataFiltersObservers <- function(input, output, session, userInfo) {
   observeEvent(input$subsetData, {
     # If subsets are defined, filter the data
     filterSubsets(userInfo)
+    checkEmptySubsetData(userInfo)
     launchEvent(SUBSET_DATA_EVENT, userInfo)
   })
 

@@ -154,15 +154,14 @@ importDataPage <- function(input, output, session, userInfo) {
     } else {
       res <- prepareData(input$filterECSAS, userInfo)
       if (res == 0) {
-        #initialize subsets
-        initSubset(userInfo)
+        ## Reset subset list
+        userInfo$importError <- NULL
+        resetSubsets(input, userInfo)
         changePage(SELECTION_PAGE, userInfo)
         selectDataFilters(input, output, session, userInfo)
         launchEvent(IMPORT_DATA_EVENT, userInfo)
       } else {
-        output$importError <- renderUI({
-          displayError("import.error")
-        })
+        userInfo$importError <- "import.error"
       }
     }
   })
@@ -173,12 +172,11 @@ importDataPage <- function(input, output, session, userInfo) {
     if (is.null(err)) {
       updateColumnRows(c(REQUIRED_COLUMNS, getFilterColumns(FILTER_LIST)), userInfo, session)
       userInfo$columnsMatched <- TRUE
+      userInfo$missingFields <- NULL
       output$vizDataTable <-
         DT::renderDataTable(importedDataTable())
     } else {
-      output$missingFields <- renderUI({
-        displayErrors(err)
-      })
+        userInfo$missingFields <- err
     }
   })
 
@@ -190,6 +188,15 @@ importDataPage <- function(input, output, session, userInfo) {
 
 ## UI
 importDataPageUI <- function(input, output, userInfo) {
+
+  output$missingFields <- renderUI({
+    displayErrors(userInfo$missingFields)
+  })
+
+  output$importError <- renderUI({
+    displayError(userInfo$importError)
+  })
+
   output$importDataPage <- renderUI({
     tagList(
       uiOutput("importDataChoice"),
@@ -270,7 +277,7 @@ importDataPageUI <- function(input, output, userInfo) {
         div(
           class = "well clearfix",
           div(class = "description", i18nText("match.columns.desc", userInfo$lang)),
-          uiOutput("missingFields"),
+          uiOutput("missingFields", style = "margin-bottom:10px"),
           # required columns (for distance analysis)
           fluidRow(column(
             5,
@@ -419,14 +426,6 @@ addActionButton <- function(id, label, userInfo) {
       actionButton(class = "actionButton",
                    id,
                    geti18nValue(label, userInfo$lang)))
-}
-
-displayError <- function(error) {
-  textOutput2(content = error, class = "error")
-}
-
-displayErrors <- function(errors) {
-  lapply(errors, displayError)
 }
 
 viewOnMapModal <- function(input, output, session, userInfo) {

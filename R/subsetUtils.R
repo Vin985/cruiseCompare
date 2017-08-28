@@ -67,11 +67,14 @@ createSubset <- function(userInfo, label = NULL) {
   return(subsetId)
 }
 
-initSubset <- function(userInfo) {
+## Removes all subseets and create default one
+resetSubsets <- function(input, userInfo) {
   userInfo$subsets <- NULL
   userInfo$subsetData <- NULL
   userInfo$subsetCpt <- 1
-  createSubset(userInfo)
+  removeSubsetObservers(userInfo)
+  id <- createSubset(userInfo)
+  createSubsetLinkObserver(id, input, userInfo)
 }
 
 
@@ -232,4 +235,51 @@ getSubsetLabelsById <- function(subsetIds, userInfo) {
     return(getLabel(s))
   }, userInfo))
   r
+}
+
+
+## Add an observer for the subset
+setSubsetObserver <- function(subset, observer, userInfo) {
+  subsetObservers <- isolate(userInfo$subsetObservers)
+  if (is.empty(subsetObservers)) {
+    userInfo$subsetObservers <- list()
+  }
+  userInfo$subsetObservers[[subset]] <- observer
+}
+
+## Remove the observer for a give subset
+removeSubsetObserver <- function(subset, userInfo) {
+  userInfo$subsetObservers[[subset]]$destroy()
+  userInfo$subsetObservers[[subset]] <- NULL
+}
+
+
+## Remove all subset observers
+removeSubsetObservers <- function(userInfo) {
+  lapply(userInfo$subsetObservers, function(x){
+    x$destroy
+  })
+  userInfo$subsetObservers <- NULL
+}
+
+## Check if there are some empty subsetted datasets. If yes, display error
+checkEmptySubsetData <- function(userInfo) {
+  subsetData <- isolate(userInfo$subsetData)
+  res <- lapply(names(subsetData), function(x, subsetData){
+    data <- subsetData[[x]]
+    if (nrow(data$raw) == 0) {
+      return(i18nInsert("subset.data.empty", userInfo$lang, replace = c(subsetid = x)))
+    }
+    return(NULL)
+  }, subsetData)
+  err <- unlist(res)
+  if (length(err) == 0) {
+    # No dataset empty, no error
+    userInfo$subsetErrors <- NULL
+    FALSE
+  } else {
+    # Empty dataset
+    userInfo$subsetErrors <- err
+    TRUE
+  }
 }

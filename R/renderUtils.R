@@ -52,3 +52,14 @@ labelWithHelp <- function(field, lang, textclass= "", useTitle = FALSE) {
     )
   )
 }
+
+displayError <- function(error) {
+  if (!is.null(error)) {
+    textOutput2(content = error, class = "error")
+  }
+}
+
+displayErrors <- function(errors) {
+  lapply(errors, displayError)
+}
+
