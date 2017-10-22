@@ -64,8 +64,10 @@ REPORTS_DIR <- file.path(ASSETS_DIR, "reports")
 TOOLS_DIR <- file.path(ASSETS_DIR, "tools")
 ANALYSIS_DIR <- file.path(DEST_DIR, "analysis")
 
+ECSAS_PATH <- file.path(ASSETS_DIR, "ECSAS_filtered.RData")
+
 REPORT_OUTPUT_DIR <- DEST_DIR
-REPORT_FIGS_OUTPUT_DIR <- file.path(REPORT_OUTPUT_DIR, "figs")
+REPORT_FIGS_OUTPUT_DIR <- "../../dest/figs"
 
 # Make sure destination directories are created
 if (!dir.exists(REPORT_OUTPUT_DIR))

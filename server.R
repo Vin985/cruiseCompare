@@ -16,7 +16,10 @@ shinyServer(function(input, output, session) {
   userInfo$lang <- lang
   userInfo$user <- user
 
+  userInfo$subsetCpt <- 1
   userInfo$page <- IMPORT_DATA_PAGE
+  createSubset(userInfo)
+
 
   navbar(input, output, session, userInfo)
 
@@ -57,6 +60,6 @@ navbar <- function(input, output, session, userInfo) {
   ## go to application selection
   applicationObserver("main", input, userInfo$lang, userInfo$user)
   output$goToMain <- renderUI({
-    applicationLink("main", userInfo$lang)
+    applicationLink("main", userInfo$lang, button = FALSE)
   })
 }

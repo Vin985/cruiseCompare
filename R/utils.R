@@ -13,7 +13,9 @@ prepareData <- function(filterECSAS = FALSE, userInfo) {
     TRUE}) || filterECSAS
   }
   # Clean data
-  d <- mcds.filter(d, dist2m = dist2m)
+  if (dist2m) {
+    d <- mcds.filter(d, dist2m = dist2m)
+  }
   d <- cleanDatabase(d)
   # Convert data to spatialDataframe
   spdata <- toSpatialDataframe(d, PROJ_AREA)

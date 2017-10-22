@@ -5,6 +5,7 @@ IMPORT_TYPE_CSV <- "csv"
 IMPORT_TYPE_RDATA <- "rdata"
 
 RDATASETS <- c("alcidae", "quebec")
+ECSASDATASET <- "ECSAS"
 
 REQUIRED_COLUMNS <- list(
   col.count = "Count",
@@ -38,8 +39,12 @@ checkImportedColumns <- function(data) {
 }
 
 importRData <- function(dataset) {
-  data(list = dataset, envir = environment())
-  importedData <- get(dataset)
+  if (dataset == ECSASDATASET) {
+    load(ECSAS_PATH)
+  } else {
+    data(list = dataset, envir = environment())
+  }
+  importedData <- get(tolower(dataset))
   return(importedData)
 }
 
@@ -57,14 +62,6 @@ importData <- function(input, userInfo) {
   } else {
     importCsvData(input, userInfo)
   }
-
-
-  if (!is.empty(input$cleanImportedData)) {
-    # TODO : add clean option. Only in csv files?
-    importedData <- cleanDatabase(importedData)
-  }
-
-  # spdf <- toSpatialDataframe(importedData, PROJ_AREA)
 
   return(importedData)
 
@@ -247,10 +244,14 @@ importDataPageUI <- function(input, output, userInfo) {
   })
 
   output$importDataRdata <- renderUI({
+    choices <- RDATASETS
+    if (isLogged(userInfo$user)) {
+      choices <- c(choices, ECSASDATASET)
+    }
     selectInput(
       "rDataChoice",
       label = geti18nValue("rdata.choice.label", userInfo$lang),
-      choices = RDATASETS
+      choices = choices
     )
   })
 
