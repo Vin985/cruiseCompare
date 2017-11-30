@@ -84,7 +84,17 @@ analyzeData <- function(data) {
   birds[, cv := sd / meanFlock]
   # birds <- birds[!is.na(cv)]
   birds <- birds[!is.na(English)]
-  setcolorder(birds, c("Alpha", "Flocks", "Count", "meanFlock", "sd", "cv", "English", "French"))
+  setcolorder(birds,
+              c(
+                "Alpha",
+                "Flocks",
+                "Count",
+                "meanFlock",
+                "sd",
+                "cv",
+                "English",
+                "French"
+              ))
   setkey(birds, English)
 
   #descriptives
@@ -151,15 +161,15 @@ getDetectionModel <- function(dt) {
 
 getDetectionProbability <- function(model) {
   ####Extract the probability of detection
-  detectionProbability <- model$parameter_estimates$Global[, -1]
-  detectionProbability[, -1] <- round(detectionProbability[, -1], 2)
+  detectionProbability <- model$parameter_estimates$Global[,-1]
+  detectionProbability[,-1] <- round(detectionProbability[,-1], 2)
 }
 
 
 getPrediction <- function(model) {
   ###extract prediction
   prediction <- model$density_estimate$Global
-  prediction[, -c(1, 2)] <- round(prediction[, -c(1, 2)], 2)
+  prediction[,-c(1, 2)] <- round(prediction[,-c(1, 2)], 2)
 }
 
 
@@ -198,14 +208,17 @@ getDensityModel <-
 
     # select visited cells and intersect with shp
     inters <- gIntersects(transects, grid, byid = TRUE)
-    ingrid <- vapply(1:nrow(inters), function(idx) {any(inters[idx,])}, FALSE)
-    grid2 <- grid[ingrid, ]
+    ingrid <-
+      vapply(1:nrow(inters), function(idx) {
+        any(inters[idx, ])
+      }, FALSE)
+    grid2 <- grid[ingrid,]
 
     # Overlay transects and grid and attribute squares to observations
     x <- over(transects, grid2)
     data$square <- x$ID
     data$square_area <- x$km2
-    data <- data[!is.na(data$square), ]
+    data <- data[!is.na(data$square),]
 
     data$SMP_LABEL <-
       paste(data$CruiseID, data$Date, data$square, sep = "_")
@@ -231,11 +244,11 @@ getDensityModel <-
     # Aggregate observations by label
     dd <- d[, .(V1 = sum(Count, na.rm = TRUE)), by = SMP_LABEL]
     # get the label name for transect without observations
-    dd <- dd[V1 == 0, ]
+    dd <- dd[V1 == 0,]
     #keep only lines for empty transects or non-empty lines for non-empty transects
     d <-
       d[(d$SMP_LABEL %in% dd$SMP_LABEL & !duplicated(d$SMP_LABEL)) |
-          (!d$SMP_LABEL %in% dd$SMP_LABEL & !(d$Alpha == "")), ]
+          (!d$SMP_LABEL %in% dd$SMP_LABEL & !(d$Alpha == "")),]
     setkey(d, square)
 
     # distance sampling w/spatial stratification
@@ -316,7 +329,6 @@ compareDensities <- function(model1, model2) {
 
 # generate distance models for all subsets
 generateDensityModel <- function(subsetIds, input, userInfo) {
-
   loginfo("retrieving models")
   distanceData <- getDistanceData(subsetIds, userInfo)
   transects <- getTransects(distanceData)
@@ -325,7 +337,8 @@ generateDensityModel <- function(subsetIds, input, userInfo) {
   if (is.empty(gridSize)) {
     gridSize <- DEFAULT_GRIDSIZE
   }
-  grid <- createHexGrid(transects, width = gridSize * 1000, convex = FALSE)
+  grid <-
+    createHexGrid(transects, width = gridSize * 1000, convex = FALSE)
   # generate distance model for each subset
   models <- lapply(subsetIds, function(id, data, grid, userInfo) {
     loginfo("generating model for subset %s", id)
@@ -340,10 +353,16 @@ generateDensityModel <- function(subsetIds, input, userInfo) {
 }
 
 
+
 compareModels <- function(subsetIds, input, userInfo) {
-  models <- generateDensityModel(subsetIds, input, userInfo)
-  model1 <- models[[subsetIds[1]]]$density
-  model2 <- models[[subsetIds[2]]]$density
-  newDensities <- compareDensities(model1, model2)
-  list(densities = newDensities, grid = model1$grid, subsets = subsetIds, models = models)
+    models <- generateDensityModel(subsetIds, input, userInfo)
+    model1 <- models[[subsetIds[1]]]$density
+    model2 <- models[[subsetIds[2]]]$density
+    newDensities <- compareDensities(model1, model2)
+    list(
+      densities = newDensities,
+      grid = model1$grid,
+      subsets = subsetIds,
+      models = models
+    )
 }

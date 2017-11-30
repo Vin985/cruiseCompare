@@ -222,8 +222,8 @@ viewDataUI <- function(input, output, session, userInfo) {
     tagList(
       fluidRow(
         class = "selectSubsetsCompare",
-        selectSubsetCompare(1, subsetChoices, input, output, userInfo),
-        selectSubsetCompare(2, subsetChoices, input, output, userInfo)
+        compareSelectInput(1, subsetChoices, input, output, userInfo),
+        compareSelectInput(2, subsetChoices, input, output, userInfo)
       )
     )
   })
@@ -249,16 +249,27 @@ viewDataUI <- function(input, output, session, userInfo) {
 
 }
 
+getCompareInputId <- function(id, idx, isReport = FALSE) {
+  report <- if (isReport) {
+    "Report"
+  } else {
+    ""
+  }
+  selectInputId <- paste0(id, report, idx)
+}
 
-selectSubsetCompare <-
+compareSelectInput <-
   function(idx,
            subsetChoices,
            input,
            output,
            userInfo,
-           reportId = NULL) {
-    selectInputId <- paste0("selectCompareSubset", reportId, idx)
-    infoOutputId <- paste0("subsetInfoCompare", reportId, idx)
+           isReport = FALSE) {
+    selectInputId <- getCompareInputId("selectCompareSubset", idx, isReport)
+    infoOutputId <- getCompareInputId("subsetInfoCompare", idx, isReport)
+
+    # selectInputId <- paste0("selectCompareSubset", reportId, idx)
+    # infoOutputId <- paste0("subsetInfoCompare", reportId, idx)
 
     ## Output
     output[[infoOutputId]] <- renderUI({
@@ -266,7 +277,7 @@ selectSubsetCompare <-
     })
     sel <- idx
     columnSize <- 4
-    if (!is.null(reportId)) {
+    if (isReport) {
       selection <- input[[paste0("selectCompareSubset", idx)]]
       if (!is.empty(selection)) {
         sel <- which(subsetChoices == selection)

@@ -283,3 +283,11 @@ checkEmptySubsetData <- function(userInfo) {
     TRUE
   }
 }
+
+
+
+areSubsetsDifferent <- function(subset1, subset2, userInfo) {
+  s1 <- getSubsetData(subset1, userInfo, as.df = TRUE)
+  s2 <- getSubsetData(subset2, userInfo, as.df = TRUE)
+  return(!identical(s1, s2))
+}

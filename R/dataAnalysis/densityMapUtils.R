@@ -35,7 +35,14 @@ createHexGrid <- function(x, width = 100000, seed = 111, convex = TRUE) {
   grid
 }
 
-
+getQuantiles <- function(data, quantiles) {
+  res <- 0
+  # If there is data, get quantiles, otherwise return 0
+  if (length(data) > 0) {
+    res <- quantile(data, c(.5, .75, .95))
+  }
+  res
+}
 
 getBreaks <- function(densities, maxDensity) {
   #select variable to map
@@ -44,21 +51,28 @@ getBreaks <- function(densities, maxDensity) {
   pos <- temp$Estimates[temp$Estimates > 0]
   neg <- temp$Estimates[temp$Estimates < 0]
 
-  bp <- quantile(pos, c(.5, .75, .95))
-  bn <- quantile(neg, c(.5, .75, .95))
+  bp <- getQuantiles(pos, c(.5, .75, .95))
+  bn <- getQuantiles(neg, c(.5, .75, .95))
+
 
   # Add and substract 0.1 to min/max because of rounding that can
   # mess with intervals
-  bp <- c(bp, max(pos) + 0.1)
-  if (any(is.na(bn))) {
-    bn <- NULL
-    bp <- c(0, bp)
-  } else {
+  if (length(bp) > 1) {
+    bp <- c(bp, max(pos) + 0.1)
+  }
+  if (length(bn) > 1) {
     bn <- c(min(neg) - 0.1, bn)
   }
 
+  # bp <- c(bp, max(pos) + 0.1)
+  # if (any(is.na(bn))) {
+  #   bn <- 0
+  # } else {
+  #   bn <- c(min(neg) - 0.1, bn)
+  # }
+
   # combine all breaks
-  breaks <- c(bn, bp)
+  breaks <- unique(c(bn, bp))
 
   #needed for data below first rounded class
   breaks <- round(breaks, 1)
@@ -69,14 +83,19 @@ getBreaks <- function(densities, maxDensity) {
 getBreakTags <- function(breaks) {
   ##associate data w/breaks intervals
   tags <- vector()
-  for (i in 2:length(breaks)) {
-    tags[i - 1] <-
-      paste(" > ", breaks[i - 1], " - ", breaks[i], sep = "")
+  if (length(breaks) > 1) {
+    for (i in 2:length(breaks)) {
+      tags[i - 1] <-
+        paste(" > ", breaks[i - 1], " - ", breaks[i], sep = "")
+    }
+    # If no negative breaks, add 0 as a specific class
+    if (!any(breaks < 0)) {
+      tags <- c("0", tags)
+    }
+  } else {
+    tags <- 0
   }
-  # If no negative breaks, add 0 as a specific class
-  if (!any(breaks < 0)) {
-    tags <- c("0", tags)
-  }
+
   tags
 }
 

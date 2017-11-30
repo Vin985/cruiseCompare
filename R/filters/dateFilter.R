@@ -118,13 +118,13 @@ addDateFilter <- function(selections, type, userInfo) {
 
 
 dateFilterEventHandler <- function(input, output, session, userInfo) {
-  event <- isolate(userInfo$event)
-  if (event$type == SUBSET_DATA_EVENT || event$type == IMPORT_DATA_EVENT) {
+  event <- isolate(userInfo$event$type)
+  if (event == SUBSET_DATA_EVENT || event == IMPORT_DATA_EVENT || event == NEW_SUBSET_EVENT) {
     logdebug("update date subset")
     setDateData(userInfo)
   }
 
-  updateDateChoices(input, session, userInfo, event = event$type)
+  updateDateChoices(input, session, userInfo, event = event)
 
 }
 
@@ -217,7 +217,7 @@ updateDateChoices <-
     }
 
 
-    if (event == CHANGE_SUBSET_EVENT) {
+    if (event == CHANGE_SUBSET_EVENT || event == NEW_SUBSET_EVENT) {
       # Subset changed, update all inputs
       updateRadioButtons(session, "selectDateBy", selected = selectDateBy)
       updateCheckboxInput(session, "restrictDate", value = restrictDate)

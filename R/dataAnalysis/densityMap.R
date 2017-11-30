@@ -3,6 +3,7 @@
 
 
 
+
 getSubsetCompareChoices <- function(userInfo, subsetId) {
   subsets <- getSubsets(userInfo)
   subsets <- subsets[names(subsets) != subsetId]
@@ -51,6 +52,14 @@ densityMap <- function(input, output, session, userInfo) {
           input$selectCompareSubset2,
           geti18nValue("need.subset2", userInfo$lang)
         )
+        # need(
+        #   areSubsetsDifferent(
+        #     input$selectCompareSubset1,
+        #     input$selectCompareSubset2,
+        #     userInfo
+        #   ),
+        #   geti18nValue("need.different.subsets", userInfo$lang)
+        # )
       )
       isolate({
         sub1 <- input$selectCompareSubset1
@@ -91,7 +100,9 @@ densityMap <- function(input, output, session, userInfo) {
             subsetId <- getCurrentSubsetId(userInfo, isolate = FALSE)
             model <- getDistanceModel(subsetId, userInfo)
             if (!is.null(model)) {
-              plotDensityModel(model$density, shpm = userInfo$landShp, lang = userInfo$lang)
+              plotDensityModel(model$density,
+                               shpm = userInfo$landShp,
+                               lang = userInfo$lang)
             } else {
               return(NULL)
             }
@@ -108,28 +119,37 @@ densityMap <- function(input, output, session, userInfo) {
     # display Button
     gridSize <- NULL
     if (!isCompare()) {
-      gridSize <- getDistanceGridSize(getCurrentSubsetId(userInfo), userInfo)
+      gridSize <-
+        getDistanceGridSize(getCurrentSubsetId(userInfo), userInfo)
     }
     if (is.null(gridSize)) {
       gridSize <- DEFAULT_GRIDSIZE
     }
     tagList(
-      column(6, div(class = "gridSize",
-             numericInput("densityGridSize",
-                             label = geti18nValue("grid.size", userInfo$lang),
-                             value = gridSize),
-             span("km")),
-             i18nTextOutput("warning.grid.size", userInfo$lang,
-                            style = "color: blue; font-size: 12px;")),
+      column(
+        6,
+        div(
+          class = "gridSize",
+          numericInput(
+            "densityGridSize",
+            label = geti18nValue("grid.size", userInfo$lang),
+            value = gridSize
+          ),
+          span("km")
+        ),
+        i18nTextOutput("warning.grid.size", userInfo$lang,
+                       style = "color: blue; font-size: 12px;")
+      ),
       column(3, ""),
       column(3, class = "compareSubsetButton",
-                   div(
-                     class = "actionButtons",
-                     actionButton(
-                       class = "actionButton",
-                       inputId = "displayDensityMap",
-                       geti18nValue("show.density.map", userInfo$lang)
-                     )
-                   )))
+             div(
+               class = "actionButtons",
+               actionButton(
+                 class = "actionButton",
+                 inputId = "displayDensityMap",
+                 geti18nValue("show.density.map", userInfo$lang)
+               )
+             ))
+    )
   })
 }

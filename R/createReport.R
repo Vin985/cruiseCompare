@@ -313,6 +313,17 @@ createReportRender <- function(input, output, session, userInfo) {
         ))
   })
 
+  output$downloadCompareButton <- renderUI({
+    # selectInput1 <- getCompareInputId("selectCompareSubset", 1, isReport = TRUE)
+    # selectInput2 <- getCompareInputId("selectCompareSubset", 2, isReport = TRUE)
+    # if (areSubsetsDifferent(input[[selectInput1]],
+    #                         input[[selectInput2]], userInfo)) {
+      downloadButton("downloadCompareReport",
+                   geti18nValue("download.compare.report", userInfo$lang),
+                   class = "downloadButton")
+    # }
+  })
+
   ## Download Handler for report comparison
   output$downloadCompareReport <-
     downloadHandler(
@@ -338,56 +349,22 @@ createReportRender <- function(input, output, session, userInfo) {
     names(subsetChoices) <- getSubsetsLabels(subsets)
 
     validate(need((length(subsetChoices) > 1),
-                  geti18nValue("need.more.subsets", userInfo$lang)
-    )
-    , errorClass = "error")
-
+                  geti18nValue("need.more.subsets", userInfo$lang)), errorClass = "error")
     tagList(
       fluidRow(
         class = "selectSubsetsCompareReport",
-        selectSubsetCompare(1, subsetChoices,
-                            input, output, userInfo, "Report"),
-        selectSubsetCompare(2, subsetChoices,
-                            input, output, userInfo, "Report")
+        compareSelectInput(1, subsetChoices,
+                            input, output, userInfo, isReport = TRUE),
+        compareSelectInput(2, subsetChoices,
+                            input, output, userInfo, isReport = TRUE)
       ),
       fluidRow(
-        column(5, offset = 7, downloadButton("downloadCompareReport",
-                                              geti18nValue("download.compare.report", userInfo$lang),
-                                              class = "downloadButton"))
+        column(5, offset = 7, uiOutput("downloadCompareButton"))
       )
     )
   })
 
 }
-
-selectSubsetCompareReport <-
-  function(idx,
-           subsetChoices,
-           input,
-           output,
-           userInfo,
-           report) {
-    selectInputId <- paste0("selectCompareSubset", idx)
-    infoOutputId <- paste0("subsetInfoCompare", idx)
-
-    ## Output
-    output[[infoOutputId]] <- renderUI({
-      div(displaySubsetInfo(input[[selectInputId]], userInfo))
-    })
-
-    column(4,
-           tagList(
-             selectizeInput(
-               selectInputId,
-               geti18nValue(paste0("compare.choices.subset", idx), userInfo$lang),
-               choices = subsetChoices,
-               selected = subsetChoices[idx],
-               options = list(maxItems = 1)
-             ),
-             uiOutput(infoOutputId)
-           ))
-  }
-
 
 createReportModal <- function(input, output, session, userInfo) {
   reportType <- list(TYPE_CREATE, TYPE_COMPARE)

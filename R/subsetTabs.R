@@ -105,7 +105,7 @@ changeSubsetsObserver <-
         loginfo("creating links")
         createSubsetLinkObserver(id, input, userInfo)
         removeModal(session)
-        launchEvent(CHANGE_SUBSET_EVENT, userInfo)
+        launchEvent(NEW_SUBSET_EVENT, userInfo)
       }
     })
 

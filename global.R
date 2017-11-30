@@ -63,17 +63,18 @@ MAPS_DIR <- file.path(ASSETS_DIR, "maps")
 REPORTS_DIR <- file.path(ASSETS_DIR, "reports")
 TOOLS_DIR <- file.path(ASSETS_DIR, "tools")
 ANALYSIS_DIR <- file.path(DEST_DIR, "analysis")
+FIGS_DIR <- file.path(DEST_DIR, "figs")
 
 ECSAS_PATH <- file.path(ASSETS_DIR, "ECSAS_filtered.RData")
 
 REPORT_OUTPUT_DIR <- DEST_DIR
-REPORT_FIGS_OUTPUT_DIR <- "../../dest/figs"
+REPORT_FIGS_OUTPUT_DIR <- file.path("../../dest/figs")
 
 # Make sure destination directories are created
 if (!dir.exists(REPORT_OUTPUT_DIR))
   dir.create(REPORT_OUTPUT_DIR)
-if (!dir.exists(REPORT_FIGS_OUTPUT_DIR))
-  dir.create(REPORT_FIGS_OUTPUT_DIR)
+if (!dir.exists(FIGS_DIR))
+  dir.create(FIGS_DIR)
 if (!dir.exists(ANALYSIS_DIR))
   dir.create(ANALYSIS_DIR)
 
@@ -121,6 +122,7 @@ readAppConf(file.path(ROOT_DIR, ".."))
 CHANGE_LANG_EVENT <- "EVENT_changeLang"
 CHANGE_PAGE_EVENT <- "EVENT_changePage"
 CHANGE_SUBSET_EVENT <- "EVENT_changeSubset"
+NEW_SUBSET_EVENT <- "EVENT_newSubset"
 SUBSET_DATA_EVENT <- "EVENT_subsetData"
 IMPORT_DATA_EVENT <- "EVENT_importData"
 
