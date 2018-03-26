@@ -8,6 +8,8 @@ shinyServer(function(input, output, session) {
 
   userInfo <- reactiveValues()
 
+  lang <- "fr"
+  user <- NULL
   queryArgs <- getInfoFromQueryString(parseQueryString(isolate(session$clientData$url_search)), defaultLang = "fr")
   if (!is.null(queryArgs)) {
     lang <- queryArgs$lang

@@ -2,17 +2,12 @@
 
 
 
-
-
 getSubsetCompareChoices <- function(userInfo, subsetId) {
   subsets <- getSubsets(userInfo)
   subsets <- subsets[names(subsets) != subsetId]
   subsetChoices <- names(subsets)
   names(subsetChoices) <- getSubsetsLabels(subsets)
 }
-
-
-
 
 
 densityMap <- function(input, output, session, userInfo) {
