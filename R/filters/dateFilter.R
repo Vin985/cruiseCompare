@@ -326,10 +326,10 @@ selectDateRender <- function(input, output, session, userInfo) {
       dateRangeInput(
         "dateRange",
         label = geti18nValue("select.date.range", userInfo$lang),
-        start = bounds$min,
-        end = bounds$max,
-        min = bounds$min,
-        max = bounds$max
+        start = bounds[1],
+        end = bounds[2],
+        min = bounds[1],
+        max = bounds[2]
       )
     })
   })

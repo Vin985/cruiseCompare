@@ -32,7 +32,10 @@ selectDataFiltersObservers <- function(input, output, session, userInfo) {
   })
 
   observeEvent(userInfo$event, {
-    propagateEvent(isolate(userInfo$filterList), input, output, session, userInfo)
+    filterList <- isolate(userInfo$filterList)
+    if (!is.empty(filterList)) {
+      propagateEvent(filterList, input, output, session, userInfo)
+    }
   })
 
 }

@@ -100,7 +100,7 @@ speciesFilterEventHandler <- function(input, output, session, userInfo) {
   if (event$type == IMPORT_DATA_EVENT) {
     ##Isolate species names and codes
     userInfo$species <-
-      isolate(distinct(dplyr::select(getFullData(userInfo, as.df = TRUE), Alpha, English, French, Latin)))
+      isolate(distinct(dplyr::select(getFullData(userInfo, as.df = TRUE), Alpha, English, French)))
   } else if (event$type == CHANGE_LANG_EVENT || event$type == CHANGE_PAGE_EVENT) {
     ## Update checkbox label
     updateCheckboxInput(session,

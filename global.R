@@ -162,10 +162,10 @@ FILTER_LIST <- c(OBSERVER_FILTER, DATE_FILTER, REGION_FILTER, SPECIES_FILTER)
 # ecsas$Date <- as.Date(ecsas$Date)
 # save(ecsas, file = file.path(ASSETS_DIR, "ECSAS_filtered.Rdata"))
 
-
-# load(file.path(ASSETS_DIR, "ECSAS_filtered.Rdata"))
-# ecsas <- cleanDatabase(ecsas)
-# spdata <- toSpatialDataframe(ecsas, PROJ_AREA)
+#
+#  load(file.path(ASSETS_DIR, "ECSAS_filtered.Rdata"))
+#  ecsas <- cleanDatabase(ecsas)
+#  spdata <- toSpatialDataframe(ecsas, PROJ_AREA)
 
 
 LAND_MAP_LAYER <- "ne_10m_land"
